@@ -5,7 +5,14 @@ Everything runs in Docker. You do not need Go, Node or Python installed.
 ## What you need
 - **Docker Desktop** (Windows, Mac) or Docker Engine with Compose v2 (Linux). Give Docker at least **6 GB of memory** (Windows: Docker Desktop uses WSL2; raise it in `%UserProfile%\.wslconfig` with `memory=8GB` if tests feel slow).
 - **Git**.
-- Free ports: **8088** (the website), 3001 (Grafana), 9090 (Prometheus), 9200 (attack engine), 8081-8083 (the three API servers), 5432, 6379.
+- Free ports: **8088** (the website), 3001 (Grafana), 9090 (Prometheus), 9200 (attack engine), 8081-8083 (the three API servers), 5433 (Postgres), 6379 (Redis).
+  Postgres is published on **5433**, not 5432, because a host PostgreSQL install
+  usually owns 5432. Override with `PG_HOST_PORT=...` if 5433 is taken too. Inside
+  the stack nothing changes: containers always reach it as `postgres:5432`.
+  Host-side `psql` therefore needs `-p 5433`, and running the Go tests from the
+  host (rather than via `scripts/test.sh`) needs an explicit
+  `PG_DSN=postgres://fairdrop:fairdrop@localhost:5433/fairdrop?sslmode=disable` —
+  the built-in default still says 5432 and would reach your host server instead.
 
 ## Set it up
 ```bash

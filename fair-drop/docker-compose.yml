@@ -26,7 +26,10 @@ services:
     container_name: fd-postgres
     command: ["postgres", "-c", "fsync=off", "-c", "synchronous_commit=off", "-c", "max_connections=200", "-c", "shared_buffers=256MB"]
     environment: { POSTGRES_USER: fairdrop, POSTGRES_PASSWORD: fairdrop, POSTGRES_DB: fairdrop }
-    ports: ["127.0.0.1:5432:5432"]
+    # Published on 5433 because a host PostgreSQL install commonly owns 5432.
+    # Containers still reach it as postgres:5432 over the compose network, so
+    # PG_DSN above is unchanged; this mapping is only for host-side psql.
+    ports: ["127.0.0.1:${PG_HOST_PORT:-5433}:5432"]
     volumes: [pgdata:/var/lib/postgresql/data]
   api1:
     <<: *api
