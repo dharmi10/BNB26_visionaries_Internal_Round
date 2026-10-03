@@ -46,16 +46,16 @@ export default function Story() {
       <div className="relative z-10">
         {STEPS.map((s, i) => (
           <section key={i} className={`flex min-h-screen items-center px-6 md:px-16 ${s.side === "right" ? "justify-end" : "justify-start"}`}>
-            <div className={`max-w-md rounded-2xl border border-line/60 bg-bg/70 p-6 backdrop-blur transition-all duration-700 ${step === i ? "translate-y-0 opacity-100" : "translate-y-6 opacity-30"}`}>
+            <div className={`max-w-md rounded-2xl border border-line/60 bg-bg/70 p-6 shadow-2xl shadow-black/40 backdrop-blur-md transition-all duration-700 ${step === i ? "translate-y-0 opacity-100" : "translate-y-6 opacity-30"}`}>
               <div className="mb-2 text-xs font-semibold tracking-[0.2em] text-accent">{s.k}</div>
               <h2 className="mb-3 text-3xl font-bold leading-tight md:text-4xl">{s.h}</h2>
               <p className="text-ink/85">{s.p}</p>
               {s.n && <p className="mt-3 rounded-lg bg-panel2/80 p-3 text-sm text-mute">{s.n}</p>}
               {s.cta && (
                 <div className="mt-5 flex flex-wrap gap-2 pointer-events-auto">
-                  <Link href="/admin" className="rounded-lg bg-accent px-4 py-2 font-semibold text-black">Open the Live Show</Link>
-                  <Link href="/" className="rounded-lg border border-line px-4 py-2">Try it as a fan</Link>
-                  <Link href="/verify" className="rounded-lg border border-line px-4 py-2">Verify a draw</Link>
+                  <Link href="/admin" className="rounded-lg bg-gradient-to-b from-accent to-accent/85 px-4 py-2 font-semibold text-black transition hover:-translate-y-px hover:brightness-110">Open the Live Show</Link>
+                  <Link href="/" className="rounded-lg border border-line bg-panel2/60 px-4 py-2 transition hover:-translate-y-px hover:border-accent/60">Try it as a fan</Link>
+                  <Link href="/verify" className="rounded-lg border border-line bg-panel2/60 px-4 py-2 transition hover:-translate-y-px hover:border-accent/60">Verify a draw</Link>
                 </div>
               )}
               {i === 0 && <div className="mt-4 text-sm text-mute">Scroll ↓</div>}

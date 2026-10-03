@@ -25,6 +25,54 @@ Saved as `reports/redteam/round2_before_fix.json` (before) and `after_fix_in_net
 | Hammer the big public download | Held: the finished list never changes, so it is cached | none needed |
 | Hold 1,500 connections open (Slowloris) | Held from inside the network: silent connections are dropped after 10 s. From the host laptop Docker Desktop's port forwarder stalls under 1,500 hung connections; that is a laptop artefact, not the product | none needed |
 
+## Round 3: four blind spots an outside reviewer named
+The reviewer said the seven bots are structurally fine but miss four things. Each was checked against the actual code first. All four became bots (choose them in Bot Lab or the Arena); none is written to lose. None has been run against the live stack by the person who added them (see "Not measured yet" below).
+
+| # | Proposal | Verdict after reading the code | Bot |
+|---|---|---|---|
+| 1 | Bots only get tickets through the server-side shortcut (`test-token`), so the real blind-signature path is never loaded by bots | **Sound.** The shortcut skips what a real client does. | `CRYPTO_SWARM` |
+| 2 | A scraper that does not fall for the decoy | **Sound, with one finding:** the site's own code never mentions the decoy route (it only names `/token`, `/register`, `/claim`), so a scraper reading the site has nothing to discard. The decoy only ever catches a bot that guesses the route or reads our docs. | `SMART_SCRAPER` |
+| 3 | A bot that fires in the last and first fraction of a second of the sale | **Sound, needed a runner hook.** An ordinary run opens the sale before any bot starts and closes it after the last bot finishes, so there was no boundary to aim at. | `STATE_SNIPER` |
+| 4 | A bot that hammers `/claim` the instant a reservation runs out, to steal waiting-list seats | **Feasible, but the premise is wrong:** a seat is reserved for one specific receipt and `/claim` needs that receipt's token secret, so nobody can take someone else's seat. What can still be tested (and now is) is that rapid-fire claims never double-book a seat or hand one out without entitlement. | `CLAIM_SNIPER` |
+
+### 1. CRYPTO_SWARM: the real ticket path, written independently
+Python does the RFC 9474 maths itself (`attack_engine/blindrsa.py`, pure big-integer maths plus SHA-384, no dependency): read the drop page for the public key, make a random token, blind it, `POST /token`, unblind, `POST /register`. It is the same variant the server and the website use (RSABSSA-SHA384-PSS-Deterministic, 2048-bit, salt 48).
+- **Proof it is the same scheme:** a ticket made by the Python code verifies under OpenSSL's standard RSA-PSS check; an OpenSSL-made signature passes the Python verifier; tampered messages, tampered signatures and a different key are refused; and `docs/blindrsa-python-vector.json` (one Python-made token, public data only) is checked by the real Go server verifier in `backend/internal/fdcrypto/python_vector_test.go`.
+- **What it adds to a run:** `POST /drops/{id}/token` traffic from bots (read its p50/p95/p99 and error rate in the run's latency table, next to the humans' numbers from the same run), plus the events `crypto_finalize_ok`, `crypto_finalize_failed` (must be 0) and `crypto_local_us` (the bot's own CPU time spent on the maths).
+- **Honest limits:**
+  - It loads the server's *signing* step, which the shortcut also did. From reading the code, the shortcut did **more** server work per ticket (it blinds, signs and unblinds on the server), so earlier load numbers were not flattering on this point. That comes from the code, not from a measurement.
+  - The CPU cost of blinding falls on the bot, not on honest users.
+  - Honest users in the test crowd still use the shortcut. To see the effect on them, run the same crowd with and without this bot and compare the humans' latency.
+  - Because the real path hides which account owns which receipt, the scorer needs a note: the bot makes one extra TEST_MODE call (`POST /drops/{id}/test-link`) naming its receipt. Without it the scorer could not credit this bot's wins to it (it would look as if bots lose). Allocation never reads it, and it does not exist outside TEST_MODE.
+
+### 2. SMART_SCRAPER: fairness without the decoy
+It fetches the site's HTML and scripts once per load process, pulls out the `/drops/{id}/<step>` routes, throws away any step whose name looks like a shortcut (`fast`, `quick`, `express`, `instant`, `turbo`, `bypass`, `skip`, `vip`), and runs the canonical steps fast from many addresses with repeats. If the site shows nothing usable it falls back to the documented routes (and says so in the event `smart_route_fallback`). Tickets still come from the harness shortcut, like every other bot, so this isolates one question.
+- **Expected outcome, stated plainly:** it is **not** caught by the decoy, and each account still gets exactly one entry (one ticket per verified person, whatever the speed or the number of addresses). So the identity rule, not the decoy, is what limits it.
+- **How to check after a run:** the bot's "decoy" count in the per-bot table is 0, its "entered" equals its accounts, and no account has more than one entry.
+- **What it does not claim:** nothing about bots that own many real accounts (that is the identity farm, unchanged). The decoy stays useful only against bots that bite.
+
+### 3. STATE_SNIPER: the edges of the sale
+Run through the runner (a Bot Lab or Arena test that includes it), the sale starts *not yet open*. The runner opens it at an announced instant and closes it at another, and tells the snipers both in **server-clock seconds**. Each sniper converts them to its own clock from the server's `Date` header (it polls until the header's second ticks over, which is accurate to a few tens of milliseconds locally) and fires 8 concurrent requests spread over plus or minus 200 ms. Half the snipers go for the opening (ticket requests). Half go for the closing (they hold a ticket, then burst entries and extra ticket requests).
+- **Score (`extras.boundary`, headline `boundary_violations`, must be 0):** entries accepted outside the sale's own recorded open/close instants, plus entries logged after the CLOSED event in the tamper-evident audit order, plus receipts a client was given that are missing from the sealed list, plus the difference between entries the server accepted and entries in the sealed list, plus the integrity counter `missing_receipts`. If a part could not be read (for example an old server image without the new `opened_at_ms` / `closed_at_ms` fields) it is shown as not checked and `all_checks_ran` is false. That is never reported as a pass.
+- **Evidence the test really touched the edges:** `shots` (how many requests left inside the band and how each ended: 200, 409 not open yet, 410 closed) and `open_flip_vs_announced_ms` / `close_flip_vs_announced_ms` (how far the real flip was from the announced instant).
+- **Honest limits:**
+  - The schedule is announced to the bots rather than discovered.
+  - Shots are counted on the bot's own clock.
+  - In a boundary run the sale closes at a fixed time (the last honest arrival plus 8 s), like a real sale, so an honest actor still retrying at that moment is told "closed", which an ordinary run never does.
+  - Snipers hold their load-generator slots for the whole window.
+  - The check covers tickets and entries, not claims.
+
+### 4. CLAIM_SNIPER: hammering `/claim`
+It enters like a competent bot. A custom test that includes it automatically gets a claim phase with short reservations (10 s). The runner (which already orchestrates claims) then hammers `/claim` for every sniper receipt, in rounds about 50 ms apart, for the whole claim phase, so it takes any seat promoted to it within roughly that time. Other receipts are claimed by the normal flow (humans forfeit some seats on purpose, which makes seats cascade down the waiting list).
+- **Score (`extras.claim_sniper`, headline `double_allocated_seats`, must be 0):** seats two receipts were both told 200 for, plus the server's `duplicate_seats`, plus `oversold`. Also `seats_claimed_without_entitlement` (every seat a sniper holds must be one its own draw place, or a promotion to it, entitles it to; must be 0) and the answers it got (hammering a receipt that holds no reservation is refused with `not_winner`, which is the expected answer).
+- **Expected outcome:** the sniper gets no more than its draw place gives it. Being fast only means it takes its own promoted seat sooner, never anyone else's.
+- **Honest limits:**
+  - Claim requests are not part of the decision feed, so the protection checker neither counts nor grades them (on purpose, noted in `feed.go`). Claim safety is judged by the integrity counters and the checks above.
+  - The hammer works in 50 ms rounds, not at an exact millisecond. A same-millisecond race cannot be forced from outside, but the claim and the expiry are single atomic steps on one clock, which is what the double-booking check exercises.
+
+### Not measured yet
+These four bots, the boundary hook and the claim hammer are unit-tested offline (Python: the real maths cross-checked with OpenSSL, the boundary score on clean and on faulty data, and the claim phase against a small fake of the claim rules). They have **not** been run against the live stack by their author. The Go side (the `test-link` note, the open/close instants on the sale page, the vector test) was written without a Go compiler available, so run `go build ./... && go test ./...` and rebuild the API image before the first live run.
+
 ## What already held
 Ticket from another sale (400) · a login card with no signature (401) · reading the secret seed early (only its fingerprint is public) · reading tier crowding to pick the emptiest tier (hidden until the list is sealed) · a second ticket in another tier (409) · lying about the address in headers (the gateway overwrites it; 48 of 80 throttled).
 

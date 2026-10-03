@@ -180,9 +180,13 @@ func (a *App) hCreateDrop(w http.ResponseWriter, r *http.Request) {
 		fail(w, 500, "crypto")
 		return
 	}
+	// A sale id can be created again after it was deleted (test sales are). The permanent audit log still holds the earlier sale's rows, so the new one
+	// starts in the next epoch: every per-sale check (sealed list vs recorded entries, counts) then only looks at THIS sale's rows.
+	var epoch int
+	a.pg.QueryRow(ctx, "SELECT COALESCE(max(epoch)+1,0) FROM audit_log WHERE drop_id=$1", id).Scan(&epoch)
 	tj, _ := json.Marshal(tiers)
 	f := map[string]any{"id": id, "event_id": ev, "event_name": evName, "venue": venue, "starts_at_ms": startsAt.UnixMilli(),
-		"mode": mode, "state": "SCHEDULED", "epoch": 0, "opens_at_ms": opens.UnixMilli(), "closes_at_ms": closes.UnixMilli(),
+		"mode": mode, "state": "SCHEDULED", "epoch": epoch, "opens_at_ms": opens.UnixMilli(), "closes_at_ms": closes.UnixMilli(),
 		"cutoff_at_ms": cutoff.UnixMilli(), "claim_sec": in.ClaimSec, "auto_draw": b2s(in.AutoDraw),
 		"token_mode": a.cfg.BlindMode, "tiers_json": string(tj)}
 	for k, v := range fields {
@@ -193,7 +197,7 @@ func (a *App) hCreateDrop(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if _, err = a.pg.Exec(ctx, `INSERT INTO drops(id,event_id,mode,state,epoch,opens_at,closes_at,cutoff_at,claim_sec,auto_draw,seed_hash,public_key)
-		VALUES($1,$2,$3,'SCHEDULED',0,$4,$5,$6,$7,$8,$9,$10)`, id, ev, mode, opens, closes, cutoff, in.ClaimSec, in.AutoDraw, fields["seed_hash"], fields["public_key"]); err != nil {
+		VALUES($1,$2,$3,'SCHEDULED',$11,$4,$5,$6,$7,$8,$9,$10)`, id, ev, mode, opens, closes, cutoff, in.ClaimSec, in.AutoDraw, fields["seed_hash"], fields["public_key"], epoch); err != nil {
 		fail(w, 500, "db")
 		return
 	}

@@ -10,8 +10,9 @@ def plan(exp="exp2", scale=0.1, i=0, drop="d"):
     return build_plan(EXPERIMENTS[exp](scale)[i], config.POPULATION, drop)
 
 
-def test_all_eight_profiles_have_both_flows():
-    assert set(PROFILES) == {"HUMAN", "SPEED_BOT", "FLOOD_BOT", "RETRY_BOT", "PROXY_ROTATOR", "SYBIL_OPERATOR", "API_SCRAPER", "UI_MIMIC"}
+def test_all_profiles_have_both_flows():
+    assert set(PROFILES) == {"HUMAN", "SPEED_BOT", "FLOOD_BOT", "RETRY_BOT", "PROXY_ROTATOR", "SYBIL_OPERATOR", "API_SCRAPER", "UI_MIMIC",
+                             "CRYPTO_SWARM", "SMART_SCRAPER", "STATE_SNIPER", "CLAIM_SNIPER"}
     assert all(callable(p.fd) and callable(p.fcfs) for p in PROFILES.values())
 
 

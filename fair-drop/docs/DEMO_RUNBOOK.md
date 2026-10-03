@@ -2,14 +2,16 @@
 
 Prereq: `scripts/start.sh` (or `.ps1`), `scripts/seed.sh` once. Open `http://localhost:8088`, admin at `/admin` (`admin` / `admin-demo-pass`), Grafana `http://localhost:3001` (anonymous viewer). Test key: `test-key-demo`.
 
-**Quick path (the best 4 minutes):** open `/admin` → **Control Room**.
-1. *Start bot attack* (pick a crowd size). Blue dots are people, orange dots are bots. At the gate each turns green (in), red (turned away, with the reason popped up) or purple (decoy trap).
-2. Scroll to **How it works**: the 6 steps a real person goes through, and the 7 rules with live "stopped" counts and which bot types each rule caught.
-3. **The bots** table: each bot type, what it tried, what it got versus what we expected (✔ as expected).
-4. **Is protection right?** scorecard: an independent judge re-checked every decision (people wrongly stopped should be 0).
-5. **Old way vs new way** bars: the same crowd under first-come-first-served.
-6. Open **Bot Lab**, pick your own mix of bots (or a preset such as *Heavy attack*), *Run this test*.
-7. **Try to break it**: the red-team tricks and which ones held.
+**Quick path (the best 4 minutes): the Live Arena.** Open `/admin` (first tab, **Live Arena**) and press **Open the live screen in a new tab** (or go to `http://localhost:8088/live`), then put that tab on a second monitor. The admin signs in once; both tabs share the session.
+1. **Control panel**: pick a preset or set exactly how many real people and how many bot accounts of each kind, choose how fast the crowd arrives (*Watchable, 2 min* is best for a demo), then **Start**. **Stop** halts it; **Restart: clear everything** gives a clean slate.
+2. **Who is in this test?** Real people vs bot accounts, counted per kind, always adding up.
+3. **Which method is fair?** The same crowd and the same 500 seats handed out three ways: first come first served (live), a simple lottery where every request is a ticket (calculated exactly once the sale is drawn), and Fair Drop (live, then the real draw). Orange squares are seats that went to bots.
+4. **Do the numbers add up?** The screen checks itself live (accounts add up, seats never exceed 500, every decision graded). Any mismatch turns red.
+5. **The bots, live**: hover a bot card to watch what that kind of bot is doing right now; click an account in the console to follow just that one.
+6. **The real web traffic**: the servers' own record of every HTTP request (method, path, status, milliseconds, which of the 3 servers, account, address, bot kind). Filter by bot kind or *Only refused / errors*. This is the proof the bots are really sending traffic. *Check it yourself* shows a terminal command that reads the same records, and the Grafana / raw-counter links show the same traffic as charts.
+7. **The gate**: every dot is a real decision (blue person, orange bot; green in, red turned away, purple decoy trap).
+8. **How the research scores this**: false-positive rate against the strict 0.1% target, precision / recall / F1 (and why plain accuracy misleads), and whether each bot kind arrives differently from the real people (burstiness and distance from people). PR-AUC, mouse tracking and fingerprinting are listed as not applicable, with the reason.
+9. *Admin → Proof & checks* has the detailed judge results and tamper checks; *More tools* still has the old Control Room, Bot Lab and the step-by-step sale controls.
 Also `/story` has a 3D scroll explanation.
 
 **0:00 FCFS under attack.** Admin → Test tools → *Run an experiment*: `exp2`, scale 0.1, tick *also run live FCFS*. Open `reports/exp2_proxy_flood/summary.md`: in the live FCFS row bots (4% of identities) took ~20% of seats (advantage ≈ 5×). Show `live_fcfs` sold-out within seconds.

@@ -2,11 +2,11 @@
 
 Live show: real people plus every kind of bot (about 4% of the crowd): speed bots, flooders, retry-spammers, address-hoppers, an identity farm, shortcut seekers and human mimics.
 
-*policy under test:* **fairdrop** &nbsp; *duration:* 140.7s &nbsp; *drop:* `exp-show_bot_zoo-fairdrop-4866bd`
+*policy under test:* **fairdrop** &nbsp; *duration:* 18.7s &nbsp; *drop:* `exp-show_bot_zoo-fairdrop-4866bd`
 
 ## Traffic
-- verified identities participating: **50000** (48000 humans, 2000 bot identities across 7 operators)
-- client requests sent: **350,000**; recorded entry attempts (server): **164221**
+- verified identities participating: **5000** (4800 humans, 200 bot identities across 7 operators)
+- client requests sent: **34,942**; recorded entry attempts (server): **16977**
 - assumed identity cost: **$3.0** (explicit, configurable; this shows the *cost* of buying more identities, it does not claim bots are impossible)
 
   - operator `speed`: SPEED_BOT, IP pool 20
@@ -21,10 +21,11 @@ Live show: real people plus every kind of bot (about 4% of the crowd): speed bot
 
 | policy | seats | bot share of seats | bot share of identities | **bot advantage ratio** | humans won / entered | human win rate |
 |---|---|---|---|---|---|---|
-| FCFS (actual) | 500 | 0.200 | 0.040 | **5.000** | 400.0 / 48000 | 0.008 |
-| Naive lottery (E over draws) | 500 | 0.185 | 0.040 | **4.626** | 407.5 / 48000 | 0.008 |
-| Fair Drop (E over draws) | 500 | 0.046 | 0.040 | **1.159** | 476.8 / 48000 | 0.010 |
-| Fair Drop (the one actual draw) | 500 | 0.050 | 0.040 | **1.250** | 475.0 / 48000 | 0.010 |
+| FCFS (actual) | 500 | 0.200 | 0.040 | **5.000** | 400.0 / 4800 | 0.083 |
+| Naive lottery (E over draws) | 500 | 0.185 | 0.040 | **4.616** | 407.7 / 4800 | 0.085 |
+| Fair Drop (E over draws) | 500 | 0.031 | 0.040 | **0.763** | 484.7 / 4800 | 0.101 |
+| Fair Drop (the one actual draw) | 500 | 0.038 | 0.040 | **0.950** | 481.0 / 4800 | 0.100 |
+| FCFS (live run, real requests against the classic sale) | 500 | 0.200 | 0.040 | **5.000** | 400.0 / 4800 | 0.083 |
 
 *Naive lottery and Fair Drop (expected) are averaged over 200 independent re-draws of the identical entries; FCFS is deterministic given arrival order.*
 
@@ -32,25 +33,29 @@ Live show: real people plus every kind of bot (about 4% of the crowd): speed bot
 
 | operator | identities | FCFS seats | naive seats (E) | Fair Drop seats (E) | Fair Drop cost/seat |
 |---|---|---|---|---|---|
-| hopper | 560 | 38 | 53.5 | 8.0 | 210.79 |
-| speed | 240 | 21 | 3.9 | 3.5 | 207.79 |
-| farm | 400 | 19 | 1.3 | 5.1 | 233.01 |
-| retry | 200 | 12 | 14.1 | 2.8 | 213.90 |
-| flood | 160 | 7 | 19.3 | 2.0 | 234.72 |
-| scraper | 240 | 3 | 0.2 | 0.0 | n/a |
-| mimic | 200 | 0 | 0.2 | 1.7 | 344.83 |
+| farm | 40 | 37 | 1.1 | 3.3 | 36.92 |
+| hopper | 56 | 27 | 51.0 | 4.7 | 35.90 |
+| speed | 24 | 14 | 4.1 | 2.3 | 31.44 |
+| flood | 16 | 13 | 22.3 | 1.4 | 33.68 |
+| retry | 20 | 7 | 13.5 | 1.8 | 33.24 |
+| scraper | 24 | 2 | 0.2 | 0.0 | n/a |
+| mimic | 20 | 0 | 0.1 | 1.8 | 33.24 |
+
+## Live FCFS run (same actors replayed against the classic sale)
+
+operators' seats: humans=400, farm=29, hopper=26, speed=16, flood=12, scraper=10, retry=7, mimic=0
 
 ## Latency (client observed)
 
 | endpoint | requests | rps | p50 | p95 | p99 | 5xx/conn errors | error rate | rejected by design (4xx) |
 |---|---|---|---|---|---|---|---|---|
-| POST /drops/{id}/register | 169294 | 1203 | 391 ms | 949 ms | 1583 ms | 0 | 0.0000% | 131733 |
-| POST /drops/{id}/test-token | 72359 | 514 | 422 ms | 1235 ms | 1901 ms | 0 | 0.0000% | 22359 |
-| GET /drops/{id} | 57707 | 410 | 224 ms | 573 ms | 867 ms | 0 | 0.0000% | 0 |
-| POST /test/login | 50000 | 355 | 351 ms | 1064 ms | 1870 ms | 0 | 0.0000% | 0 |
-| POST /drops/{id}/register-fast | 240 | 2 | 356 ms | 764 ms | 1086 ms | 0 | 0.0000% | 105 |
-| GET /drops | 200 | 1 | 1541 ms | 2884 ms | 4380 ms | 0 | 0.0000% | 0 |
-| GET /drops/{id}/seats | 200 | 1 | 405 ms | 1003 ms | 1394 ms | 0 | 0.0000% | 0 |
+| POST /drops/{id}/register | 16953 | 907 | 41 ms | 467 ms | 806 ms | 0 | 0.0000% | 10192 |
+| POST /drops/{id}/test-token | 7182 | 384 | 132 ms | 755 ms | 1231 ms | 0 | 0.0000% | 2182 |
+| GET /drops/{id} | 5743 | 307 | 110 ms | 449 ms | 783 ms | 0 | 0.0000% | 0 |
+| POST /test/login | 5000 | 268 | 251 ms | 1957 ms | 2347 ms | 0 | 0.0000% | 0 |
+| POST /drops/{id}/register-fast | 24 | 1 | 154 ms | 789 ms | 1161 ms | 0 | 0.0000% | 0 |
+| GET /drops | 20 | 1 | 165 ms | 1061 ms | 1061 ms | 0 | 0.0000% | 0 |
+| GET /drops/{id}/seats | 20 | 1 | 38 ms | 319 ms | 319 ms | 0 | 0.0000% | 0 |
 
 ## Integrity (must be 0)
 
@@ -60,11 +65,11 @@ Live show: real people plus every kind of bot (about 4% of the crowd): speed bot
  "duplicate_entries": 0,
  "duplicate_seats": 0,
  "invalid_transitions": 0,
- "missing_receipts": 7464,
+ "missing_receipts": 51378,
  "oversold": 0
 }
 ```
-audit chain valid: **True** (887914 events)  -> overall: **VIOLATIONS**
+audit chain valid: **True** (956464 events)  -> overall: **VIOLATIONS**
 
 ## Independent verification (Python reference verifier)
 

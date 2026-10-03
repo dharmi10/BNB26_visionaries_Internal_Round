@@ -2,13 +2,19 @@
 import Link from "next/link";
 import { api, usePoll, money, fmtTime } from "@/lib/api";
 import { Badge, Card, StateBadge, Spinner, Button } from "@/components/ui";
-import { Shield, Lock, Dice5, FileCheck2 } from "lucide-react";
+import { Shield, Lock, Dice5, FileCheck2, Zap, Shuffle, ShieldCheck, Radio, ArrowRight } from "lucide-react";
 
 const steps = [
-  { icon: Shield, t: "One identity, one entry", d: "Each verified phone gets exactly one entry token per drop. 1,000 IP addresses or 1,000 retries still make one entry." },
-  { icon: FileCheck2, t: "Signed receipt", d: "Entering gives you a receipt signed by the server. Arrival time is recorded but never used: entering at second 1 or minute 10 is identical." },
-  { icon: Lock, t: "Locked list, then randomness", d: "When the window closes the entry list is hashed into a Merkle root and published BEFORE the server reveals its secret seed." },
-  { icon: Dice5, t: "Anyone can recompute the draw", d: "winner order = sort by SHA-256(seed ‖ root ‖ beacon ‖ receipt). Paste your receipt into the verify page and your browser re-runs the whole draw." },
+  { icon: Shield, t: "One person, one entry", d: "Each verified phone gets exactly one entry per drop. 1,000 retries or 1,000 IP addresses still make one entry." },
+  { icon: FileCheck2, t: "A signed receipt", d: "Entering gives you a receipt signed by the server. Arrival time is recorded but never used: second 1 or minute 10 is identical." },
+  { icon: Lock, t: "Seal the list, then draw", d: "When the window closes, the entry list is fingerprinted and published BEFORE the server reveals its secret seed." },
+  { icon: Dice5, t: "Anyone can re-check the draw", d: "Paste your receipt into the verify page and your own browser re-runs the whole draw. No need to trust us." },
+];
+
+const ways = [
+  { icon: Zap, name: "First come, first served", tag: "Old way", tone: "red" as const, d: "Fastest click wins. Bots click fastest, and one account can grab several seats.", ring: "border-bad/40" },
+  { icon: Shuffle, name: "Simple lottery", tag: "Better, still gameable", tone: "amber" as const, d: "A random draw, but every request is a ticket, so hammering the server buys extra chances.", ring: "border-warn/40" },
+  { icon: ShieldCheck, name: "Fair Drop", tag: "This project", tone: "teal" as const, d: "One verified person is one entry. The list is sealed, then a random draw anyone can re-check.", ring: "border-accent/60 glow-ok" },
 ];
 
 export default function Home() {
@@ -16,35 +22,52 @@ export default function Home() {
   const drops = (data || []).filter((d) => !String(d.id).startsWith("exp-"));
   return (
     <div className="space-y-10">
-      <section className="grid items-center gap-8 md:grid-cols-[1.4fr_1fr]">
+      <section className="slide-in grid items-center gap-8 pt-2 md:grid-cols-[1.35fr_1fr]">
         <div>
-          <Badge tone="teal">500 seats · 50,000 people · zero timing advantage</Badge>
-          <h1 className="mt-4 text-4xl font-extrabold leading-tight tracking-tight md:text-5xl">Win by luck,<br />not by <span className="text-accent">speed</span>.</h1>
+          <Badge tone="teal">Fair Drop</Badge>
+          <h1 className="mt-4 text-4xl font-extrabold leading-tight tracking-tight md:text-5xl">500 seats, 50,000 people, and bots.<br /><span className="bg-gradient-to-r from-accent to-accent2 bg-clip-text text-transparent">Fair Drop gives bots no advantage.</span></h1>
           <p className="mt-4 max-w-xl text-mute">
-            Fair Drop sells scarce seats through a lottery where network speed, request volume and IP rotation give <b className="text-ink">no advantage</b>.
-            The only way to get more chances is more real, verified identities, and each one costs real money. Everything is publicly verifiable.
+            Clicking faster, sending more requests or switching IP address earns no extra chances. One verified person gets one entry, and anyone can re-check the draw.
           </p>
-          <div className="mt-6 flex gap-3">
-            <Link href="/login"><Button size="lg">Sign in (simulated OTP)</Button></Link>
-            <Link href="/story"><Button size="lg" variant="secondary">▶ Watch the story</Button></Link>
-            <Link href="/verify"><Button size="lg" variant="secondary">Verify a draw</Button></Link>
+          <div className="mt-6 flex flex-wrap gap-3">
+            <Link href="/live"><Button size="lg"><Radio className="h-4 w-4" />Watch the bots live</Button></Link>
+            <a href="#drops"><Button size="lg" variant="secondary">Join a drop<ArrowRight className="h-4 w-4" /></Button></a>
+          </div>
+          <div className="mt-4 flex flex-wrap gap-x-5 gap-y-1 text-sm text-mute">
+            <Link href="/story" className="hover:text-ink">Watch the story</Link>
+            <Link href="/verify" className="hover:text-ink">Verify a draw</Link>
+            <Link href="/login" className="hover:text-ink">Sign in</Link>
           </div>
         </div>
-        <Card className="space-y-2 text-sm">
-          <div className="text-xs font-semibold uppercase tracking-wider text-mute">What we claim — and what we don't</div>
-          <p><span className="text-ok">✔</span> Speed, volume and IP rotation do not change lottery odds when identity eligibility is enforced.</p>
-          <p><span className="text-ok">✔</span> The server cannot silently drop your entry or rig the draw: you can prove it.</p>
-          <p><span className="text-bad">✘</span> We do <b>not</b> claim bots can't exist, that CAPTCHAs/IP blocks solve botting, or that nobody can buy real verified identities. We measure the <i>cost per seat</i> instead.</p>
+        <Card className="space-y-3 text-sm">
+          <div className="text-xs font-semibold uppercase tracking-wider text-mute">What we claim</div>
+          <p><span className="text-ok">✔</span> Speed, volume and IP switching do not change your odds in the fair draw.</p>
+          <p><span className="text-ok">✔</span> The server cannot quietly drop your entry or rig the draw. You can prove it.</p>
+          <div className="border-t border-line pt-3 text-xs font-semibold uppercase tracking-wider text-mute">What we do NOT claim</div>
+          <p><span className="text-bad">✘</span> We do not stop identity farms. Someone with many real, verified accounts still gets one entry per account. We make that cost real money instead.</p>
         </Card>
       </section>
 
       <section>
+        <h2 className="mb-4 text-lg font-bold">Three ways to hand out seats</h2>
+        <div className="grid gap-4 md:grid-cols-3">
+          {ways.map((w) => (
+            <Card key={w.name} className={`flex flex-col gap-2 ${w.ring}`}>
+              <div className="flex items-center justify-between"><w.icon className="h-6 w-6 text-accent" /><Badge tone={w.tone}>{w.tag}</Badge></div>
+              <div className="font-semibold">{w.name}</div>
+              <p className="text-sm text-mute">{w.d}</p>
+            </Card>
+          ))}
+        </div>
+      </section>
+
+      <section id="drops" className="scroll-mt-20">
         <h2 className="mb-4 text-lg font-bold">Available drops</h2>
         {!data && !error && <Spinner label="loading drops" />}
         {error && <Card className="text-bad">Backend not reachable: {String((error as any).message)}</Card>}
         <div className="grid gap-4 md:grid-cols-2">
           {drops.map((d) => (
-            <Card key={d.id} className="flex flex-col gap-3">
+            <Card key={d.id} className="flex flex-col gap-3 transition hover:-translate-y-0.5">
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <div className="text-lg font-bold">{d.event_name}</div>
@@ -71,7 +94,10 @@ export default function Home() {
         <h2 className="mb-4 text-lg font-bold">How fairness works</h2>
         <div className="grid gap-4 md:grid-cols-4">
           {steps.map((s, i) => (
-            <Card key={i}><s.icon className="mb-3 h-6 w-6 text-accent" /><div className="mb-1 font-semibold">{s.t}</div><p className="text-sm text-mute">{s.d}</p></Card>
+            <Card key={i} className="transition hover:-translate-y-0.5">
+              <div className="mb-3 flex items-center gap-2"><s.icon className="h-6 w-6 text-accent" /><span className="num text-xs font-semibold text-mute">STEP {i + 1}</span></div>
+              <div className="mb-1 font-semibold">{s.t}</div><p className="text-sm text-mute">{s.d}</p>
+            </Card>
           ))}
         </div>
       </section>

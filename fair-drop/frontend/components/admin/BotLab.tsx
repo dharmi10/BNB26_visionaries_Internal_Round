@@ -7,9 +7,10 @@ import { BOTS, BOT_ORDER, n } from "./botinfo";
 // "Bot Lab": choose your own crowd (how many real people, how many bots of each kind) and run exactly that.
 const PRESETS: { name: string; hint: string; people: number; bots: Record<string, number> }[] = [
   { name: "No bots", hint: "a normal day: only real people", people: 3000, bots: {} },
-  { name: "A few of each", hint: "about 4% bots, every kind", people: 3000, bots: { SPEED_BOT: 15, FLOOD_BOT: 10, RETRY_BOT: 12, PROXY_ROTATOR: 35, SYBIL_OPERATOR: 25, API_SCRAPER: 15, UI_MIMIC: 10 } },
-  { name: "Heavy attack", hint: "20% bots, every kind", people: 3000, bots: { SPEED_BOT: 80, FLOOD_BOT: 50, RETRY_BOT: 60, PROXY_ROTATOR: 170, SYBIL_OPERATOR: 120, API_SCRAPER: 70, UI_MIMIC: 50 } },
+  { name: "A few of each", hint: "about 5% bots, every kind (all 11)", people: 3000, bots: { SPEED_BOT: 15, FLOOD_BOT: 10, RETRY_BOT: 12, PROXY_ROTATOR: 35, SYBIL_OPERATOR: 25, API_SCRAPER: 15, UI_MIMIC: 10, CRYPTO_SWARM: 12, SMART_SCRAPER: 10, STATE_SNIPER: 10, CLAIM_SNIPER: 8 } },
+  { name: "Heavy attack", hint: "20% bots, every kind (all 11)", people: 3000, bots: { SPEED_BOT: 80, FLOOD_BOT: 50, RETRY_BOT: 60, PROXY_ROTATOR: 170, SYBIL_OPERATOR: 120, API_SCRAPER: 70, UI_MIMIC: 50, CRYPTO_SWARM: 60, SMART_SCRAPER: 50, STATE_SNIPER: 50, CLAIM_SNIPER: 40 } },
   { name: "Only a big identity farm", hint: "the one bot we can't fully stop", people: 3000, bots: { SYBIL_OPERATOR: 600 } },
+  { name: "Only careful bots (no decoy)", hint: "bots that avoid the decoy and use real tickets", people: 3000, bots: { CRYPTO_SWARM: 100, SMART_SCRAPER: 100, STATE_SNIPER: 60, CLAIM_SNIPER: 40 } },
   { name: "Only shortcut seekers", hint: "all fall for the decoy", people: 3000, bots: { API_SCRAPER: 300 } },
 ];
 

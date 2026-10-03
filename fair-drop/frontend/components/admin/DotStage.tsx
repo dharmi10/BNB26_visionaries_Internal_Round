@@ -15,12 +15,13 @@ export type StageProps = {
   seats?: number;
 };
 
-const W = 1000, H = 560, GATE = 500;
+// the height follows the number of bot lanes (7 lanes = 560, the original size; every extra lane adds 48)
+const W = 1000, GATE = 500, H = Math.max(560, 206 + BOT_ORDER.length * 48 + 18);
 const KIND = { human: "#38bdf8", bot: "#fb923c", unknown: "#94a3b8" } as Record<string, string>;
 const VERD = { accepted: "#22c55e", rejected: "#ef4444", decoy: "#a855f7", absorbed: "#64748b" } as Record<string, string>;
 const PEOPLE = { x: 20, y: 40, w: 215, h: 118 }, VISIT = { x: 20, y: 166, w: 215, h: 30 };
 const laneY = (i: number) => 206 + i * 48;
-const BINS = { ok: { x: 765, y: 40, w: 215, h: 210 }, decoy: { x: 765, y: 262, w: 215, h: 72 }, no: { x: 765, y: 346, w: 215, h: 194 } };
+const BINS = { ok: { x: 765, y: 40, w: 215, h: 210 }, decoy: { x: 765, y: 262, w: 215, h: 72 }, no: { x: 765, y: 346, w: 215, h: H - 366 } };
 
 type Dot = { why?: string; hit?: boolean; born: number; dur: number; sx: number; sy: number; gy: number; tx: number; ty: number; v: string; k: string; jit: number };
 type Spark = { x: number; y: number; vx: number; vy: number; born: number; life: number; c: string };

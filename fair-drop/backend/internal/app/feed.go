@@ -54,7 +54,8 @@ type feedRec struct {
 	v    []any
 }
 
-// feed records one decision. stage: token|register|tarpit|buy|limit. In production (no TEST_MODE) token events
+// feed records one decision. stage: token|register|tarpit|buy|limit. (Claim requests and the TEST_MODE test-link note are not decisions
+// of this kind: they write no feed record, so protection() neither counts nor grades them; seat safety is checked by integrity().) In production (no TEST_MODE) token events
 // carry no actor/ip so the feed cannot be used to link a token to a later anonymous registration.
 func (a *App) feed(drop, stage, outcome, actor, ip string, kv ...any) {
 	a.feedAt(drop, nowMS(), stage, outcome, actor, ip, kv...)
@@ -184,6 +185,30 @@ func (a *App) hFeed(w http.ResponseWriter, r *http.Request) {
 	key := dk(id, "feed")
 	lbl := a.labels(ctx)
 	var msgs []redis.XMessage
+	if pfq := r.URL.Query().Get("pf"); pfq != "" && after == "" {
+		// history of ONE bot kind: the newest 40 recorded decisions of that kind, even when it has been quiet for a while (the normal feed only keeps the newest few hundred overall)
+		all, _ := a.rdb.XRevRangeN(ctx, key, "+", "-", 40000).Result()
+		out := make([]map[string]any, 0, 40)
+		for _, m := range all {
+			ac, _ := m.Values["a"].(string)
+			if profOf(lbl, ac) != pfq {
+				continue
+			}
+			st, _ := m.Values["s"].(string)
+			o, _ := m.Values["o"].(string)
+			if st == "token" && o == "ok" {
+				continue
+			}
+			k, op := kindOp(lbl, ac)
+			ip, _ := m.Values["ip"].(string)
+			out = append(out, map[string]any{"id": m.ID, "t": atoi64(strVal(m.Values["t"])), "s": st, "o": o, "v": verdict(st, o), "k": k, "op": op, "pf": pfq, "a": ac, "ip": ip})
+			if len(out) == 40 {
+				break
+			}
+		}
+		writeJSON(w, 200, map[string]any{"events": out, "cursor": "", "history": true})
+		return
+	}
 	if after == "" {
 		msgs, _ = a.rdb.XRevRangeN(ctx, key, "+", "-", 120).Result()
 		for i, j := 0, len(msgs)-1; i < j; i, j = i+1, j-1 {
@@ -386,6 +411,15 @@ func (a *App) protection(ctx context.Context, id string) (map[string]any, error)
 		Reasons                                                            map[string]int
 	}
 	byProf := map[string]*prof{}
+	// arrivals: requests per second since the first decision, per bot kind (HUMAN for people). Lets the admin compare how people and bots arrive
+	// (steady crowd vs synchronised bursts) without shipping every event to the browser.
+	var t0 int64
+	for _, e := range evs {
+		if e.t > 0 && (t0 == 0 || e.t < t0) {
+			t0 = e.t
+		}
+	}
+	arrivals := map[string][]int{}
 	pf := func(name string) *prof {
 		if byProf[name] == nil {
 			byProf[name] = &prof{Reasons: map[string]int{}}
@@ -403,6 +437,12 @@ func (a *App) protection(ctx context.Context, id string) (map[string]any, error)
 			reqByKind[kind]["all"]++
 		}
 		if p := profOf(lbl, e.a); p != "" && !(e.s == "token" && e.o == "ok") {
+			if sec := int((e.t - t0) / 1000); sec >= 0 && sec < 3600 {
+				for len(arrivals[p]) <= sec {
+					arrivals[p] = append(arrivals[p], 0)
+				}
+				arrivals[p][sec]++
+			}
 			q := pf(p)
 			q.Requests++
 			switch v {
@@ -536,6 +576,8 @@ func (a *App) protection(ctx context.Context, id string) (map[string]any, error)
 					add(kind, "TP")
 				}
 			}
+		case "claim", "link":
+			// never recorded today; if such a stage is ever added it is deliberately not graded here (see the comment on feed)
 		case "tarpit":
 			ar := au("decoy_endpoint")
 			ar.Rejected++
@@ -611,7 +653,7 @@ func (a *App) protection(ctx context.Context, id string) (map[string]any, error)
 			people[k]["not_entered"]++
 		}
 	}
-	return map[string]any{"drop_id": id, "mode": d.Mode, "decisions": len(evs), "confusion": conf, "audit": audit, "people": people, "by_profile": byProf, "requests_by_kind": reqByKind,
+	return map[string]any{"drop_id": id, "mode": d.Mode, "decisions": len(evs), "confusion": conf, "audit": audit, "people": people, "by_profile": byProf, "requests_by_kind": reqByKind, "arrivals": arrivals,
 		"notes": map[string]string{
 			"positive": "oracle says the request should be rejected (repeat, forged, late, ineligible, decoy)",
 			"FP":       "a request the oracle says was fine but the server rejected",

@@ -56,12 +56,28 @@ The stand-alone verifier script must reproduce the Go answer key exactly (finger
 ### Python: `attack_engine/test_attack_engine.py` (the bot simulator itself)
 | Test | In plain words |
 |---|---|
-| `test_all_eight_profiles_have_both_flows` | All 8 bot types exist and know both sale types. |
+| `test_all_profiles_have_both_flows` | All 12 bot types exist and know both sale types. |
 | `test_plan_is_reproducible_and_identities_are_unique` | Same settings give the same crowd; no two people share an identity. |
 | `test_operator_to_identity_and_ip_mapping` | Each bot operator controls the identities and IPs we say it does. |
 | `test_labels_match_plan` | The "this one is a bot / this one is a person" answer key matches what was sent. This is the key the protection scorecard relies on. |
 | `test_sybil_scaling_has_three_sizes_and_exp4_has_one_human` | The "bot buys more identities" experiment has the right crowd shapes. |
 | `test_pool_overflow_is_rejected` | Asking for more bots than identities exist gives a clear error, not silent wrong results. |
+
+### Python: `attack_engine/test_blindrsa.py` and `test_new_bots.py` (the four bots added after the outside review)
+| Test | In plain words |
+|---|---|
+| `test_python_blinded_token_verifies_under_openssl_pss` | A ticket the Python bot makes the real (blind-signature) way passes OpenSSL's standard signature check, the same rule the server uses. |
+| `test_openssl_pss_signature_passes_our_verifier` | And the other way round, so the Python code is not just agreeing with itself. |
+| `test_tampered_or_foreign_tokens_are_rejected` | A changed ticket, a changed signature, a ticket from another sale, or a lying issuer never becomes a valid ticket. |
+| `test_server_input_rules` | What the bot sends has the exact sizes the server insists on. |
+| `test_committed_vector_verifies` | The saved Python-made ticket (`docs/blindrsa-python-vector.json`) still verifies; the Go test checks the same file with the real server code. |
+| `test_clock_offset_estimate` | Reading the server's clock from its `Date` header is accurate to a few milliseconds in a simulation, even when the clock is hours off. |
+| `test_crypto_swarm_*` | The real-path bot gets a ticket the server accepts, and refuses to use a bad server answer. |
+| `test_scraper_*`, `test_smart_scraper_*` | The careful scraper finds the real steps, drops shortcut-looking ones, never calls the decoy, and still gets only one entry. |
+| `test_state_sniper_*` | The boundary sniper really fires inside plus or minus 200 ms of the opening and closing, and is refused outside the sale. |
+| `test_boundary_score_*` | The "boundary violations" number is 0 for a clean run and counts each kind of fault when one is planted; an unreadable part is reported as not checked, never as a pass. |
+| `test_claim_sniper_*` | Hammering for seats takes only the sniper's own (or promoted-to-it) seats and never double-books one. |
+| `test_custom_test_*`, `test_snipers_wake_*`, `test_labels_for_the_new_bots_*` | The new bots can be chosen in a custom test, get the setup they need, and carry their evaluation-only labels. |
 
 ### Browser code: `frontend/lib/fdcrypto.test.ts`
 | Test | In plain words |

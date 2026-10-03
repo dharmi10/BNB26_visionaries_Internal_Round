@@ -614,3 +614,54 @@ func TestFlooderCannotLockOutNeighboursOnTheSameAddress(t *testing.T) {
 		t.Fatal("a real person on the same address must still get in, got", c, r)
 	}
 }
+
+// A bot that does its own RFC 9474 blinding (attack_engine CRYPTO_SWARM) uses the real POST /token. The evaluation-only
+// test-link note must credit its receipt to its account, must stay TEST_MODE-only, and the sale page must report the real
+// open/close instants (the attack engine's boundary check reads them).
+func TestRealBlindFlowTestLinkAndBoundaryFields(t *testing.T) {
+	e := newEnv(t, true)
+	d := e.mkDrop(map[string]int{"gold": 2}, 5, 3600_000)
+	ctx := context.Background()
+	rt, _, _ := e.a.rt(ctx, d)
+	tok := make([]byte, 32)
+	rand.Read(tok)
+	bl, st, cl, err := fdcrypto.ClientBlind(rt.pub, tok)
+	if err != nil {
+		t.Fatal(err)
+	}
+	c, r := e.do("POST", "/drops/"+d+"/token", map[string]any{"blinded_msg": base64.StdEncoding.EncodeToString(bl), "tier": "gold"}, e.user("swarm-1", 1))
+	if c != 200 {
+		t.Fatal("real token request", c, r)
+	}
+	bs, _ := base64.StdEncoding.DecodeString(r["blind_sig"].(string))
+	sig, err := cl.Finalize(st, bs)
+	if err != nil {
+		t.Fatal(err)
+	}
+	tk := token{base64.StdEncoding.EncodeToString(tok), base64.StdEncoding.EncodeToString(sig)}
+	if c, r := e.register(d, tk, "gold", "k-swarm"); c != 200 {
+		t.Fatal("register with a client-blinded token", c, r)
+	}
+	link := map[string]any{"token_msg": tk.msg}
+	if c, _ := e.do("POST", "/drops/"+d+"/test-link", link, nil); c != 401 {
+		t.Fatal("test-link needs the test key, got", c)
+	}
+	if c, _ := e.do("POST", "/drops/"+d+"/test-link", map[string]any{"token_msg": "AAAA"}, e.user("swarm-1", 1)); c != 400 {
+		t.Fatal("a too-short token must be refused, got", c)
+	}
+	if c, r := e.do("POST", "/drops/"+d+"/test-link", link, e.user("swarm-1", 1)); c != 200 || r["receipt_id"] != ridOf(d, tk) {
+		t.Fatal("test-link", c, r)
+	}
+	if u, _ := e.a.rdb.HGet(ctx, dk(d, "tok2user"), ridOf(d, tk)).Result(); u != "swarm-1" {
+		t.Fatal("the evaluation link must name the account, got", u)
+	}
+	_, v := e.do("GET", "/drops/"+d, nil, nil)
+	if v["opened_at_ms"] == nil || v["closed_at_ms"] != nil {
+		t.Fatal("an open sale reports when it opened and nothing about closing", v)
+	}
+	e.adv(d, "CLOSED", 200)
+	_, v = e.do("GET", "/drops/"+d, nil, nil)
+	if v["closed_at_ms"] == nil || v["closed_at_ms"].(float64) < v["opened_at_ms"].(float64) {
+		t.Fatal("a closed sale reports when it closed", v)
+	}
+}

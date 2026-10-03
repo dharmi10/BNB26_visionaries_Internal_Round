@@ -43,6 +43,11 @@ def headline(res: dict) -> dict:
          "integrity_ok": integ.get("ok"), "integrity_violations": integ.get("violations"),
          "verified_by_reference_verifier": (res.get("verification") or {}).get("reference_verifier_ok"),
          "p99_ms": {k.split(" ", 1)[-1]: v["p99_ms"] for k, v in res["latency"].items() if "register" in k or "token" in k or "buy" in k}}
+    ex = res.get("extras", {})
+    if "boundary" in ex:                      # STATE_SNIPER run: must be 0
+        h["boundary_violations"] = ex["boundary"]["boundary_violations"]
+    if "claim_sniper" in ex:                  # CLAIM_SNIPER run: must be 0
+        h["double_allocated_seats"] = ex["claim_sniper"]["double_allocated_seats"]
     return h
 
 

@@ -29,7 +29,7 @@ class OperatorSpec:
     identities: int
     ip_pool: int = 1000
     params: Dict[str, float] = field(default_factory=dict)   # profile knobs, e.g. {"requests": 300}
-    start: str = "open"          # open = fire at window open; uniform = spread over the window
+    start: str = "open"          # open = fire at window open; uniform = spread over the window; boundary = STATE_SNIPER (wakes before time zero, aims at the open/close instants)
 
 
 @dataclass

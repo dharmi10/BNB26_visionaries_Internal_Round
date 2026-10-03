@@ -27,7 +27,7 @@ def start(body: dict) -> dict:
         people = max(0, int(sp.get("people", 0)))
         if people + sum(bots.values()) < 1 or people + sum(bots.values()) > config.POPULATION:
             return {"error": f"choose between 1 and {config.POPULATION:,} accounts in total"}
-        cmd += ["--spec", json.dumps({"people": people, "bots": bots})]
+        cmd += ["--spec", json.dumps({"people": people, "bots": bots, "window": int(sp.get("window") or 0)})]
     if body.get("also_fcfs"):
         cmd.append("--also-fcfs")
     for k in ("users", "processes"):

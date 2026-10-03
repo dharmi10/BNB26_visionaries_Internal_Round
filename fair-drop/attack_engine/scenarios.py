@@ -10,6 +10,9 @@ from .profiles import PROFILES
 from .users import assign_identities, human_ip
 
 
+BOUNDARY_WARMUP = -4.5     # seconds before time zero that STATE_SNIPER actors wake up (the runner opens the sale at -0.5, see runner.plan_boundary)
+
+
 def arrival_offset(rng: random.Random, window: float, pattern: str) -> float:
     if pattern == "uniform" or pattern == "poisson":
         return rng.uniform(0, window)
@@ -31,7 +34,10 @@ def build_plan(scn: Scenario, population: int, drop_id: str) -> dict:
         params = {**prof.defaults, **spec.params}
         ops.append({"index": oi, "id": spec.id, "profile": spec.profile, "ip_pool": spec.ip_pool or prof.ip_pool, "params": params, "start": spec.start})
         for uid in ids:
-            off = rng.uniform(0, 1.0) if spec.start == "open" else arrival_offset(rng, scn.window_sec, "uniform")
+            if spec.start == "boundary" and scn.policy != "fcfs":
+                off = BOUNDARY_WARMUP + rng.uniform(0, 0.5)   # STATE_SNIPER: wakes early (negative = before the plan's time zero) to log in and sync its clock
+            else:
+                off = rng.uniform(0, 1.0) if spec.start in ("open", "boundary") else arrival_offset(rng, scn.window_sec, "uniform")
             actors.append({"uid": uid, "kind": "bot", "op": spec.id, "oi": oi, "profile": spec.profile, "offset": round(off, 3), "tier": bot_tier, "ip": ""})
     for i, uid in enumerate(human_ids):
         actors.append({"uid": uid, "kind": "human", "op": "humans", "oi": -1, "profile": "HUMAN", "offset": round(arrival_offset(rng, scn.window_sec, scn.arrival), 3),
@@ -112,9 +118,14 @@ def show(scale: float) -> List[Scenario]:
            ("farm", "SYBIL_OPERATOR", 0.20, 1000, {"requests": 3}, "open"), ("scraper", "API_SCRAPER", 0.12, 5, {"fallback": 0}, "open"),
            ("mimic", "UI_MIMIC", 0.10, 50, {}, "uniform")]
     ops = [OperatorSpec(i, prof, max(5, int(bots * share)), ip_pool=pool, params=params, start=start) for i, prof, share, pool, params, start in zoo]
+    # the four harder bots (real client-side tickets, decoy-avoiding scraper, boundary sniper, claim sniper) are in the default crowd too
+    for prof, share in (("CRYPTO_SWARM", 0.08), ("SMART_SCRAPER", 0.08), ("STATE_SNIPER", 0.08), ("CLAIM_SNIPER", 0.06)):
+        pr = PROFILES[prof]
+        ops.append(OperatorSpec(f"show-{prof.lower().replace('_', '-')}", prof, max(5, int(bots * share)), ip_pool=pr.ip_pool, params=dict(pr.defaults), start="boundary" if prof == "STATE_SNIPER" else "open"))
     taken = sum(o.identities for o in ops)
-    return [Scenario("show_bot_zoo", "Live show: real people plus every kind of bot (about 4% of the crowd): speed bots, flooders, retry-spammers, address-hoppers, an identity farm, shortcut seekers and human mimics.",
-                     humans=_humans(n, taken), operators=ops, window_sec=_win(scale))]
+    claims = any(o.profile == "CLAIM_SNIPER" for o in ops)
+    return [Scenario("show_bot_zoo", "Live show: real people plus every kind of bot (about 5% of the crowd): speed bots, flooders, retry-spammers, address-hoppers, an identity farm, shortcut seekers, human mimics, real-ticket bots, careful scrapers, boundary snipers and seat snipers.",
+                     humans=_humans(n, taken), operators=ops, claims=claims, claim_sec=10 if claims else Scenario.claim_sec, window_sec=_win(scale))]
 
 
 CUSTOM = {"spec": None}   # set by the CLI (--spec) from the admin "Bot Lab": {"people": N, "bots": {PROFILE: count}}
@@ -129,12 +140,15 @@ def custom(scale: float) -> List[Scenario]:
         cnt = int(cnt)
         if cnt > 0 and prof in PROFILES and prof != "HUMAN":
             pr = PROFILES[prof]
-            ops.append(OperatorSpec(f"lab-{prof.lower().replace('_', '-')}", prof, cnt, ip_pool=pr.ip_pool, params=dict(pr.defaults), start="uniform" if prof == "UI_MIMIC" else "open"))
+            ops.append(OperatorSpec(f"lab-{prof.lower().replace('_', '-')}", prof, cnt, ip_pool=pr.ip_pool, params=dict(pr.defaults),
+                                    start="uniform" if prof == "UI_MIMIC" else "boundary" if prof == "STATE_SNIPER" else "open"))
+    claims = any(o.profile == "CLAIM_SNIPER" for o in ops)     # claim snipers need a claim phase to snipe in (short reservations so expiries happen)
     total = people + sum(o.identities for o in ops)
     if total < 1 or total > config.POPULATION:
         raise SystemExit(f"a custom test needs between 1 and {config.POPULATION} accounts in total (got {total})")
     return [Scenario("custom_mix", f"Your own test: {people:,} real people plus " + (", ".join(f"{o.identities:,} {o.profile.lower().replace('_', ' ')}s" for o in ops) or "no bots") + ".",
-                     humans=people, operators=ops, window_sec=_win(max(0.05, total / config.POPULATION)))]
+                     humans=people, operators=ops, claims=claims, claim_sec=10 if claims else Scenario.claim_sec,
+                     window_sec=float(min(600, max(15, sp.get("window") or 0)) if sp.get("window") else _win(max(0.05, total / config.POPULATION))))]
 
 
 SHOWCASE: Dict[str, Callable[[float], List[Scenario]]] = {"show": show, "custom": custom}

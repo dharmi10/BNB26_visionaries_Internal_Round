@@ -160,6 +160,33 @@ func (a *App) hTestToken(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, 200, map[string]any{"token_msg": b64(tok), "sig": b64(sig), "tier": in.Tier, "receipt_id": rid})
 }
 
+// hTestLink: TEST_MODE only. When a bot does its own RFC 9474 blinding and calls the real POST /token, the server (by design) cannot
+// tell which account holds which receipt, so the EVALUATION could not credit that bot's wins to it. The bot reports its
+// token here, exactly the receipt->account note that hTestToken makes for the shortcut. Used ONLY by the evaluation
+// (counterfactuals, labels, live split), never by allocation. Not a decision stage: nothing is written to the decision feed.
+func (a *App) hTestLink(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+	var in struct {
+		TokenMsg string `json:"token_msg"`
+	}
+	if decode(r, &in) != nil {
+		fail(w, 400, "bad_request")
+		return
+	}
+	tok, err := unb64(in.TokenMsg)
+	if err != nil || len(tok) < 16 || len(tok) > 128 {
+		fail(w, 400, "bad_token")
+		return
+	}
+	if _, _, err := a.rt(r.Context(), id); err != nil {
+		fail(w, 404, "drop_not_found")
+		return
+	}
+	rid := fdcrypto.ReceiptID(id, tok)
+	a.rdb.HSet(r.Context(), dk(id, "tok2user"), rid, claimsOf(r).Subject)
+	writeJSON(w, 200, map[string]any{"receipt_id": rid})
+}
+
 // ---- reset ----
 
 func (a *App) scanDel(ctx context.Context, pattern string, keep ...string) int {

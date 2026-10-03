@@ -37,11 +37,14 @@ type App struct {
 	inflight atomic.Int64
 	err5xx   atomic.Int64
 	feedCh   chan feedRec
+	traceCh  chan traceRec
+	traceOn  atomic.Bool
 }
 
 func New(ctx context.Context, cfg Config) (*App, error) {
 	a := &App{cfg: cfg, jwtKey: []byte(cfg.JWTSecret), started: time.Now(), lat: newLat()}
 	defer a.startFeed(context.Background())
+	defer a.startTrace(context.Background())
 	a.rdb = redis.NewClient(&redis.Options{Addr: cfg.RedisAddr, DB: cfg.RedisDB, PoolSize: 200, MinIdleConns: 20})
 	var err error
 	for i := 0; i < 60; i++ {
@@ -204,7 +207,7 @@ type dropRT struct {
 }
 
 func (a *App) rt(ctx context.Context, id string) (*dropRT, string, error) {
-	vals, err := a.rdb.HMGet(ctx, "drop:"+id, "state", "epoch").Result()
+	vals, err := a.rdb.HMGet(ctx, "drop:"+id, "state", "epoch", "seed_hash").Result()
 	if err != nil {
 		return nil, "", err
 	}
@@ -212,7 +215,9 @@ func (a *App) rt(ctx context.Context, id string) (*dropRT, string, error) {
 		return nil, "", ErrNoDrop
 	}
 	state, epoch := vals[0].(string), vals[1].(string)
-	ck := id + ":" + epoch
+	// the key fingerprint is part of the cache key: a drop deleted and re-created under the same id (epoch 0 again) must not reuse the old key on another replica
+	sh, _ := vals[2].(string)
+	ck := id + ":" + epoch + ":" + sh
 	if v, ok := a.rts.Load(ck); ok {
 		return v.(*dropRT), state, nil
 	}
@@ -248,6 +253,13 @@ func (d *Drop) view() map[string]any {
 		"claim_sec": d.ClaimSec, "seed_hash": d.SeedHash, "public_key": d.PublicKey,
 		"public_key_jwk": d.PublicKeyJWK, "receipt_public_key": d.ReceiptKey, "token_mode": d.TokenMode,
 		"tiers": tiers, "total_seats": d.totalSeats(), "server_time_ms": nowMS(),
+	}
+	// when the sale really opened / closed, by the one clock all decisions use (Redis TIME): lets a test check the boundaries exactly
+	if t := atoi64(d.raw["at_OPEN"]); t > 0 {
+		v["opened_at_ms"] = t
+	}
+	if t := atoi64(d.raw["at_CLOSED"]); t > 0 {
+		v["closed_at_ms"] = t
 	}
 	if d.MerkleRoot != "" {
 		v["merkle_root"] = d.MerkleRoot

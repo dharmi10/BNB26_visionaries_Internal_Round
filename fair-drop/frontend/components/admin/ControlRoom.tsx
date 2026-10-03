@@ -143,6 +143,7 @@ export default function ControlRoom({ dropId, setDropId, goTab }: { dropId: stri
   const lanes: Record<string, { entered: number; blocked: number }> = {};
   [...BOT_ORDER, "HUMAN"].forEach((id) => { if (bp[id]) lanes[id] = { entered: bp[id].Entered, blocked: bp[id].Rejected + bp[id].Decoy }; });
   const humanSold = bp.HUMAN?.Reasons?.sold_out || 0;
+  const counts_bot_seats = rq.bot?.accepted || 0;
   const botIn = ppl.bot?.entered || 0, botAcc = ppl.bot?.attempted || 0, botBlocked = (rq.bot?.rejected || 0) + (rq.bot?.decoy || 0);
 
   const last = (() => { const x = (exps || []).find((e: any) => (e.name.includes("show_bot_zoo") || e.name.includes("custom_mix")) && !e.name.includes("live FCFS")) || (exps || []).find((e: any) => e.name.includes("exp2") && !e.name.includes("live FCFS")); return x; })();
@@ -196,7 +197,7 @@ export default function ControlRoom({ dropId, setDropId, goTab }: { dropId: stri
         <Tile label="Let in per second" value={n(Math.round(live.okps))} tone="ok" sub="green dots" />
         <Tile label="Turned away per second" value={n(Math.round(live.nops))} tone="bad" sub="red dots" />
         <Tile label={isOld ? "Real people who got a seat" : "Real people in the draw"} value={`${n(ppl.human?.entered)} of ${n(ppl.human?.attempted)}`} tone={isOld ? "warn" : "ok"} sub={isOld ? "old way: most are told sold out" : "everyone eligible gets in, then the draw decides"} />
-        <Tile label="Bot accounts that got in" value={`${n(botIn)} of ${n(botAcc)}`} tone="warn" sub="one entry each at most; extra tries are blocked" />
+        <Tile label="Bot accounts that got in" value={`${n(botIn)} of ${n(botAcc)}`} tone="warn" sub={isOld ? `these accounts bought ${n(counts_bot_seats)} seats between them: the old way lets one account buy several` : "one entry each at most; extra tries are blocked"} />
         <Tile label="Bot requests turned away" value={n(botBlocked)} tone="ok" sub="cheating attempts stopped" />
         {isOld ? <Tile label="People told “sold out”" value={n(humanSold)} tone="warn" sub="the old way’s unfairness" /> : <Tile label="Real people wrongly turned away" value={n(ch?.FP || 0)} tone={ch?.FP ? "bad" : "ok"} sub="should always be 0" tipText="False positives among real people" />}
       </div>
@@ -215,6 +216,20 @@ export default function ControlRoom({ dropId, setDropId, goTab }: { dropId: stri
           <ul className="space-y-1 text-xs">{feed.map((e) => <li key={e.id} className="flex gap-2"><span style={{ color: e.v === "accepted" ? "#22c55e" : e.v === "rejected" ? "#ef4444" : e.v === "decoy" ? "#a855f7" : "#64748b" }}>●</span><span className="text-ink/90">{sentence(e)}</span></li>)}{!feed.length && <li className="text-mute">Waiting for activity…</li>}</ul></Card>
       </div>
 
+      {c && ppl.human && (() => {
+        const att = (ppl.human.attempted || 0) + (ppl.bot?.attempted || 0), inn = (ppl.human.entered || 0) + (ppl.bot?.entered || 0), out = (ppl.human.not_entered || 0) + (ppl.bot?.not_entered || 0);
+        const dec = (c.TP || 0) + (c.TN || 0) + (c.FP || 0) + (c.FN || 0) + (c.Absorbed || 0) + (c.Throttled || 0);
+        const laneSum = Object.values(bp).reduce((a: number, v: any) => a + (v.Entered || 0), 0);
+        const rows: [string, boolean, string][] = [
+          ["Everyone is counted once: in + not in = all accounts", inn + out === att, `${n(inn)} + ${n(out)} = ${n(att)}`],
+          ["The bot lanes add up to the people and bots who got in", laneSum === inn, `lanes ${n(laneSum)} · total ${n(inn)}`],
+          ["Every decision is graded by the judge", dec === (prot?.decisions || 0), `${n(dec)} graded of ${n(prot?.decisions || 0)} recorded`],
+          ["No real person was wrongly turned away", (c.FP || 0) === 0 || isOld, `${n(ch?.FP || 0)} people, ${n(c.FP || 0)} requests`],
+        ];
+        return (<Card className="space-y-1"><CardTitle>Do the numbers add up? <span className="text-xs font-normal text-mute">(checked live for the sale you are watching)</span></CardTitle>
+          {rows.map(([t, ok, d]) => <div key={t} className="flex flex-wrap gap-2 text-sm"><span className={ok ? "text-ok" : "text-bad"}>{ok ? "✔" : "✘"}</span><span>{t}</span><span className="text-mute">{d}</span></div>)}
+          <div className="text-xs text-mute">“Accounts” and “seats” differ in the old way: one account can buy several seats, so seats can be more than accounts.</div></Card>);
+      })()}
       <H2 id="how" sub="For a demo: how a person gets in, and every rule that stopped a bot in this test.">How it works, live</H2>
       <HowItWorks pulse={pulse} prot={prot} dropId={dropId} isOld={isOld} />
 

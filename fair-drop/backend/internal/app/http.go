@@ -159,6 +159,7 @@ func (a *App) instrument(next http.Handler) http.Handler {
 		d := time.Since(start)
 		a.reqTotal.Add(1)
 		a.m.observe(ep, r.Method, sr.code, d)
+		a.traceReq(r, ep, sr.code, d)
 		if sr.code >= 500 {
 			a.err5xx.Add(1)
 		}
@@ -225,6 +226,7 @@ func (a *App) Router() http.Handler {
 		ad.Get("/drops/{id}/audit", a.hAudit)
 		ad.Get("/drops/{id}/integrity", a.hIntegrity)
 		ad.Get("/drops/{id}/feed", a.hFeed)
+		ad.Get("/drops/{id}/trace", a.hTrace)
 		ad.Get("/drops/{id}/protection", a.hProtection)
 		ad.Get("/drops/{id}/pulse", a.hPulse)
 		ad.Get("/drops/{id}/claims", a.hClaimsSummary)
@@ -248,6 +250,7 @@ func (a *App) Router() http.Handler {
 	r.Post("/test/tamper-audit", a.requireTest(a.hTestTamper))
 	r.Get("/baseline/{id}/status", a.hBaselineStatus)
 	r.Post("/drops/{id}/test-token", a.requireTest(a.requireRole("user", a.hTestToken)))
+	r.Post("/drops/{id}/test-link", a.requireTest(a.requireRole("user", a.hTestLink)))
 	r.Post("/test/admin-token", a.requireTest(a.hTestAdminToken))
 	return r
 }

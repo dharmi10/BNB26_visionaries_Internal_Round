@@ -75,7 +75,7 @@ class ActorUser(FastHttpUser):
             rng = random.Random(a["uid"])
             ip = a["ip"] or op.ip(rng.randrange(max(1, op.ip_pool)))
             c = FDClient(self.client, STATE["rec"], PREFIX, PLAN["drop_id"], a["uid"], ip)
-            ctx = Ctx(c, a, op, op.params if op else {}, rng, STATE["rec"], a["tier"])
+            ctx = Ctx(c, a, op, op.params if op else {}, rng, STATE["rec"], a["tier"], boundary=PLAN.get("boundary"))
             (prof.fd if PLAN["policy"] == "fairdrop" else prof.fcfs)(ctx)
         except Exception as e:  # a crashing actor must never take the run down
             STATE["rec"].events["actor_crash"] += 1
