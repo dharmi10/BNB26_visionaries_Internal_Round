@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fair Drop — Baseline</title>
+<style>
+  :root {
+    --bg: #0f1115; --panel: #171a21; --line: #272c36;
+    --fg: #e6e8ee; --muted: #8b93a4; --accent: #5b8cff;
+    --ok: #3ecf8e; --warn: #ffb020; --bad: #ff5c5c;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 24px 16px 48px;
+    background: var(--bg); color: var(--fg);
+    font: 15px/1.5 ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  }
+  .wrap { max-width: 880px; margin: 0 auto; }
+  h1 { font-size: 22px; margin: 0 0 4px; letter-spacing: -0.01em; }
+  .sub { color: var(--muted); font-size: 13px; margin-bottom: 24px; }
+  .grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+  .card {
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: 10px; padding: 16px;
+  }
+  .card h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .06em;
+    color: var(--muted); margin: 0 0 12px; font-weight: 600; }
+  label { display: block; font-size: 12px; color: var(--muted); margin: 8px 0 4px; }
+  input {
+    width: 100%; padding: 8px 10px; border-radius: 6px;
+    border: 1px solid var(--line); background: #0f1218; color: var(--fg);
+    font: inherit; font-size: 14px;
+  }
+  input:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+  button {
+    margin-top: 12px; width: 100%; padding: 9px 12px; border: 0; border-radius: 6px;
+    background: var(--accent); color: #fff; font: inherit; font-weight: 600; cursor: pointer;
+  }
+  button:hover:not(:disabled) { filter: brightness(1.1); }
+  button:disabled { opacity: .45; cursor: not-allowed; }
+  button.buy { background: var(--ok); color: #06241a; font-size: 16px; padding: 14px; }
+  .row { display: flex; gap: 10px; }
+  .row > * { flex: 1; }
+  .seats { font-size: 44px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.1; }
+  .seats small { font-size: 14px; font-weight: 400; color: var(--muted); }
+  .pill {
+    display: inline-block; padding: 2px 9px; border-radius: 999px;
+    font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em;
+  }
+  .pill.open { background: rgba(62,207,142,.15); color: var(--ok); }
+  .pill.sold_out, .pill.closed { background: rgba(255,92,92,.15); color: var(--bad); }
+  .pill.pending { background: rgba(255,176,32,.15); color: var(--warn); }
+  .log {
+    margin-top: 16px; background: #0b0d12; border: 1px solid var(--line);
+    border-radius: 8px; padding: 12px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 12px; color: var(--muted); max-height: 220px; overflow-y: auto;
+    white-space: pre-wrap; word-break: break-word;
+  }
+  .log b { color: var(--fg); font-weight: 600; }
+  .log .ok { color: var(--ok); }
+  .log .bad { color: var(--bad); }
+  .kv { font-size: 13px; color: var(--muted); }
+  .kv span { color: var(--fg); font-family: ui-monospace, Menlo, monospace; }
+  .naive { margin-top: 10px; font-size: 12px; color: var(--muted); display: flex;
+    align-items: center; gap: 6px; }
+  .naive input { width: auto; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Fair Drop — baseline</h1>
+  <div class="sub">First-come-first-served. No queue, no lottery, no bot defence — by design.</div>
+
+  <div class="grid">
+    <div class="card">
+      <h2>1 · Create a drop</h2>
+      <div class="row">
+        <div>
+          <label for="seats">Seats</label>
+          <input id="seats" type="number" value="500" min="1">
+        </div>
+        <div>
+          <label for="window">Window (sec)</label>
+          <input id="window" type="number" value="300" min="1">
+        </div>
+      </div>
+      <button id="btn-create">Create drop</button>
+      <div class="kv" style="margin-top:10px">drop_id: <span id="drop-id">—</span></div>
+    </div>
+
+    <div class="card">
+      <h2>2 · Log in</h2>
+      <label for="phone">Phone</label>
+      <input id="phone" value="+15550100">
+      <label for="dfp">Device fingerprint</label>
+      <input id="dfp" value="fp-browser-01">
+      <button id="btn-login">Send OTP &amp; verify</button>
+      <div class="kv" style="margin-top:10px">user_id: <span id="user-id">—</span></div>
+    </div>
+
+    <div class="card">
+      <h2>3 · Buy</h2>
+      <div class="seats"><span id="seats-left">—</span><small id="seats-total"></small></div>
+      <div style="margin:8px 0 4px"><span class="pill pending" id="state">no drop</span></div>
+      <button class="buy" id="btn-buy" disabled>Buy a seat</button>
+      <label class="naive"><input type="checkbox" id="naive"> use ?mode=naive (oversells on purpose)</label>
+    </div>
+  </div>
+
+  <div class="log" id="log">Ready. Create a drop to begin.</div>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const state = { dropId: null, token: null, userId: null };
+
+function log(msg, cls) {
+  const el = $("log");
+  const t = new Date().toISOString().slice(11, 23);
+  const line = document.createElement("div");
+  line.innerHTML = `<b>${t}</b> <span class="${cls || ""}"></span>`;
+  line.querySelector("span").textContent = msg;
+  el.prepend(line);
+}
+
+async function api(method, path, body, token) {
+  const headers = {};
+  if (body) headers["Content-Type"] = "application/json";
+  if (token) headers["Authorization"] = "Bearer " + token;
+  const res = await fetch(path, {
+    method,
+    headers,
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  let data = null;
+  try { data = await res.json(); } catch (_) { /* empty body */ }
+  return { status: res.status, data };
+}
+
+$("btn-create").onclick = async () => {
+  const { status, data } = await api("POST", "/admin/drops", {
+    seats: Number($("seats").value),
+    window_sec: Number($("window").value),
+  });
+  if (status !== 200) { log("create failed: " + JSON.stringify(data), "bad"); return; }
+  state.dropId = data.drop_id;
+  $("drop-id").textContent = data.drop_id;
+  log(`drop ${data.drop_id} created — ${data.seats} seats, opens ${data.opens_at}`, "ok");
+  refresh();
+};
+
+$("btn-login").onclick = async () => {
+  const { status, data } = await api("POST", "/auth/otp", {
+    phone: $("phone").value,
+    device_fp: $("dfp").value,
+  });
+  if (status !== 200) { log("login failed: " + JSON.stringify(data), "bad"); return; }
+  state.token = data.token;
+  state.userId = data.user_id;
+  $("user-id").textContent = data.user_id;
+  log(`logged in as ${data.user_id}`, "ok");
+  syncBuyButton();
+};
+
+$("btn-buy").onclick = async () => {
+  const mode = $("naive").checked ? "?mode=naive" : "";
+  const { status, data } = await api(
+    "POST", `/baseline/${state.dropId}/buy${mode}`, null, state.token);
+  if (status === 200) log(`got seat #${data.seat_no}`, "ok");
+  else log(`buy rejected (${status}): ${data && data.error}`, "bad");
+  refresh();
+};
+
+function syncBuyButton() {
+  $("btn-buy").disabled = !(state.dropId && state.token);
+}
+
+async function refresh() {
+  if (!state.dropId) return;
+  const { status, data } = await api("GET", `/drops/${state.dropId}`);
+  if (status !== 200) return;
+  $("seats-left").textContent = data.seats_left;
+  $("seats-total").textContent = ` / ${data.seats} left`;
+  const pill = $("state");
+  pill.textContent = data.state.replace("_", " ");
+  pill.className = "pill " + data.state;
+  syncBuyButton();
+}
+
+// Live seats_left poll, once a second.
+setInterval(refresh, 1000);
+</script>
+</body>
+</html>
