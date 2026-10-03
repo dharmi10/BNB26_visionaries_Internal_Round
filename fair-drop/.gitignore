@@ -1,0 +1,11 @@
+node_modules/
+.next/
+__pycache__/
+*.pyc
+.pytest_cache/
+reports/*/w*.json
+reports/*/done.*
+reports/*/plan.json
+reports/*/locust.log
+reports/_*.log
+*.tokens.json
