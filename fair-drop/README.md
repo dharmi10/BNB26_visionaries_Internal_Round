@@ -32,6 +32,7 @@ Windows equivalents: `scripts\*.ps1`. Tests: what each one means in plain Englis
 - **`/story`**: a scroll-driven 3D explanation (people, bots, the old way, the sealed list, the draw).
 - **Live Arena** (`/live`, or Admin's first tab): the easiest way to see everything. Choose the crowd (real people + each kind of bot, 11 kinds), press Start, and watch the three methods side by side (old first-come-first-served, simple lottery, Fair Drop), hover any bot to see what it is doing, read the servers' real request log, and see the research metrics. The screen checks its own numbers against each other.
 - Admin → More tools → Detailed control room (the older, denser view): start a bot attack with one button; watch each decision as a dot (green accepted, red rejected, purple decoy trap; circle = person, diamond = bot); live users, requests/s, accepted/s, rejected/s; people vs bots let in; a **protection scorecard** (correctly blocked / false negatives / false positives / correctly allowed, with every rejection reason re-checked by an independent oracle); **BEFORE (first-come-first-served) vs AFTER (Fair Drop)** bars; and a **protection self-test** of 18 known-good/known-bad requests.
+- Research metrics (what we took from the bot-detection review and what does not apply): [docs/RESEARCH_METRICS.md](docs/RESEARCH_METRICS.md)
 - Admin → Summary: the same facts in plain sentences.
 
 ## Results (full scale, one laptop, rate limits on, live FCFS replay of the same actors)
