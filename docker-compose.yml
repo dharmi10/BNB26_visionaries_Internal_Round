@@ -7,6 +7,8 @@ services:
       ADDR: ":8080"
       REDIS_ADDR: "redis:6379"
       JWT_SECRET: "dev-secret-change-me"
+      # Set in .env (not committed). Empty = ticketing disabled.
+      DATABASE_URL: "${DATABASE_URL:-}"
       # Sized for the bot-lab burst: the buy path is one Redis round trip, so
       # the pool is the real concurrency limit on the hot path.
       REDIS_POOL_SIZE: "512"

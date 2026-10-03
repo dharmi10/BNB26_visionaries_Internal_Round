@@ -17,6 +17,10 @@ type Config struct {
 	JWTSecret []byte
 	TokenTTL  time.Duration
 
+	// DatabaseURL is the Postgres (Neon) connection string for the ticketing
+	// site. Empty disables it and serves only the baseline drop API.
+	DatabaseURL string
+
 	// RedisPoolSize bounds the connection pool. The buy path is a single
 	// round trip, so the pool is the real concurrency limit on the hot path.
 	RedisPoolSize int
@@ -35,6 +39,8 @@ func Load() Config {
 		RedisDB:   envInt("REDIS_DB", 0),
 		JWTSecret: []byte(env("JWT_SECRET", "dev-secret-change-me")),
 		TokenTTL:  time.Duration(envInt("TOKEN_TTL_SEC", 3600)) * time.Second,
+
+		DatabaseURL: env("DATABASE_URL", ""),
 
 		RedisPoolSize: envInt("REDIS_POOL_SIZE", maxInt(64, runtime.NumCPU()*32)),
 

@@ -283,7 +283,7 @@ func newLab(t *testing.T) *lab {
 	cfg.JWTSecret = []byte("test-secret")
 	cfg.TokenTTL = time.Hour
 
-	srv := httptest.NewServer(httpapi.New(cfg, st))
+	srv := httptest.NewServer(httpapi.New(cfg, st, nil))
 	t.Cleanup(srv.Close)
 
 	return &lab{srv: srv, client: newClient(64)}

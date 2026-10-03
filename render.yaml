@@ -1,0 +1,36 @@
+# Render Blueprint: the Go backend (Docker) plus a Redis-compatible Key Value.
+# Postgres stays on Neon; paste its URL into DATABASE_URL when Render asks.
+services:
+  - type: web
+    name: fairdrop-api
+    runtime: docker
+    plan: free
+    # Same AWS region as the Neon database (us-west-2), so queries stay local.
+    region: oregon
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /healthz
+    envVars:
+      - key: PORT
+        value: "8080"
+      - key: ADDR
+        value: ":8080"
+      - key: REDIS_ADDR
+        fromService:
+          type: keyvalue
+          name: fairdrop-redis
+          property: hostport
+      # Free Key Value caps connections at ~50; MinIdleConns is pool/4.
+      - key: REDIS_POOL_SIZE
+        value: "40"
+      - key: JWT_SECRET
+        generateValue: true
+      - key: DATABASE_URL
+        sync: false
+
+  - type: keyvalue
+    name: fairdrop-redis
+    plan: free
+    region: oregon
+    # Empty allow-list: reachable only from services inside this Render account.
+    ipAllowList: []
+    maxmemoryPolicy: noeviction

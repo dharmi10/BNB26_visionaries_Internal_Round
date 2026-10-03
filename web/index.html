@@ -3,193 +3,817 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Fair Drop — Baseline</title>
+<title>fairdrop · Book Tickets</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #0f1115; --panel: #171a21; --line: #272c36;
-    --fg: #e6e8ee; --muted: #8b93a4; --accent: #5b8cff;
-    --ok: #3ecf8e; --warn: #ffb020; --bad: #ff5c5c;
+    --brand: #f84464; --brand-dk: #dc3558;
+    --ink: #333; --ink-2: #666; --ink-3: #999;
+    --line: #e5e5e5; --bg: #f5f5f5; --card: #fff;
+    --head: #1f2533; --hero: #1a1a1a;
+    --seat: #1ea83c; --sold: #eee;
+    --ok: #4abd5d; --warn: #ffa426;
   }
   * { box-sizing: border-box; }
+  html, body { margin: 0; }
   body {
-    margin: 0; padding: 24px 16px 48px;
-    background: var(--bg); color: var(--fg);
-    font: 15px/1.5 ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    font: 14px/1.45 Roboto, system-ui, -apple-system, "Segoe UI", sans-serif;
+    color: var(--ink); background: var(--bg); -webkit-font-smoothing: antialiased;
   }
-  .wrap { max-width: 880px; margin: 0 auto; }
-  h1 { font-size: 22px; margin: 0 0 4px; letter-spacing: -0.01em; }
-  .sub { color: var(--muted); font-size: 13px; margin-bottom: 24px; }
-  .grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
-  .card {
-    background: var(--panel); border: 1px solid var(--line);
-    border-radius: 10px; padding: 16px;
+  a { color: inherit; text-decoration: none; }
+  button { font: inherit; cursor: pointer; }
+  h1, h2, h3 { margin: 0; }
+  .wrap { max-width: 1240px; margin: 0 auto; padding: 0 16px; }
+  .hidden { display: none !important; }
+
+  .btn {
+    border: 0; border-radius: 8px; background: var(--brand); color: #fff;
+    font-weight: 500; padding: 12px 28px; font-size: 15px; transition: background .15s;
   }
-  .card h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .06em;
-    color: var(--muted); margin: 0 0 12px; font-weight: 600; }
-  label { display: block; font-size: 12px; color: var(--muted); margin: 8px 0 4px; }
-  input {
-    width: 100%; padding: 8px 10px; border-radius: 6px;
-    border: 1px solid var(--line); background: #0f1218; color: var(--fg);
-    font: inherit; font-size: 14px;
+  .btn:hover:not(:disabled) { background: var(--brand-dk); }
+  .btn:disabled { background: #ccc; cursor: not-allowed; }
+  .btn.sm { padding: 6px 14px; font-size: 12px; border-radius: 4px; }
+  .btn.block { width: 100%; }
+
+  /* ---------------------------------------------------------------- header */
+  .top { background: #fff; position: relative; z-index: 5; }
+  .top .wrap { display: flex; align-items: center; gap: 24px; height: 64px; }
+  .logo { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 21px; letter-spacing: -.4px; white-space: nowrap; }
+  .logo i { width: 26px; height: 18px; border-radius: 3px; background: var(--brand); position: relative; }
+  .logo i::before, .logo i::after { content: ""; position: absolute; top: 50%; width: 8px; height: 8px; margin-top: -4px; border-radius: 50%; background: #fff; }
+  .logo i::before { left: -4px; } .logo i::after { right: -4px; }
+  .logo b { color: var(--brand); font-weight: 700; }
+  .search {
+    flex: 1; max-width: 560px; display: flex; align-items: center; gap: 10px;
+    border: 1px solid var(--line); border-radius: 4px; padding: 0 12px; height: 36px; color: var(--ink-3);
   }
-  input:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
-  button {
-    margin-top: 12px; width: 100%; padding: 9px 12px; border: 0; border-radius: 6px;
-    background: var(--accent); color: #fff; font: inherit; font-weight: 600; cursor: pointer;
+  .search input { border: 0; outline: 0; flex: 1; min-width: 0; font: inherit; font-size: 13px; color: var(--ink); }
+  .top-r { margin-left: auto; display: flex; align-items: center; gap: 20px; font-size: 13px; }
+  .city { color: var(--ink-2); white-space: nowrap; }
+  .user-btn { border: 0; background: none; color: var(--ink); font-size: 13px; padding: 0; white-space: nowrap; }
+  .subnav { background: #f2f2f2; font-size: 14px; }
+  .subnav .wrap { display: flex; gap: 24px; height: 40px; align-items: center; color: var(--ink); }
+  .subnav .r { margin-left: auto; display: flex; gap: 20px; font-size: 12px; color: var(--ink-2); }
+  .subnav a.on { color: var(--brand); }
+
+  /* --------------------------------------------------------------- posters */
+  .poster {
+    position: relative; aspect-ratio: 2 / 3; border-radius: 8px; overflow: hidden;
+    background: linear-gradient(165deg, var(--a), var(--b)); color: #fff;
+    display: flex; flex-direction: column; justify-content: flex-end; padding: 16px;
   }
-  button:hover:not(:disabled) { filter: brightness(1.1); }
-  button:disabled { opacity: .45; cursor: not-allowed; }
-  button.buy { background: var(--ok); color: #06241a; font-size: 16px; padding: 14px; }
-  .row { display: flex; gap: 10px; }
-  .row > * { flex: 1; }
-  .seats { font-size: 44px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.1; }
-  .seats small { font-size: 14px; font-weight: 400; color: var(--muted); }
-  .pill {
-    display: inline-block; padding: 2px 9px; border-radius: 999px;
-    font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em;
+  .poster .art { position: absolute; inset: 0; }
+  .poster.movie .art {
+    background:
+      radial-gradient(circle at 50% 56%, #ffd27a 0 15%, rgba(255,140,90,.55) 15.5% 21%, transparent 21.5%),
+      radial-gradient(circle at 50% 10%, rgba(255,255,255,.12), transparent 60%);
   }
-  .pill.open { background: rgba(62,207,142,.15); color: var(--ok); }
-  .pill.sold_out, .pill.closed { background: rgba(255,92,92,.15); color: var(--bad); }
-  .pill.pending { background: rgba(255,176,32,.15); color: var(--warn); }
-  .log {
-    margin-top: 16px; background: #0b0d12; border: 1px solid var(--line);
-    border-radius: 8px; padding: 12px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-    font-size: 12px; color: var(--muted); max-height: 220px; overflow-y: auto;
-    white-space: pre-wrap; word-break: break-word;
+  .poster.movie .art::after {
+    content: ""; position: absolute; left: -30%; right: -30%; bottom: 0; height: 44%;
+    background:
+      repeating-linear-gradient(90deg, rgba(120,240,255,.45) 0 1px, transparent 1px 26px),
+      repeating-linear-gradient(0deg, rgba(120,240,255,.45) 0 1px, transparent 1px 16px),
+      linear-gradient(#0b1820, #06222b);
+    transform: perspective(160px) rotateX(50deg); transform-origin: bottom;
   }
-  .log b { color: var(--fg); font-weight: 600; }
-  .log .ok { color: var(--ok); }
-  .log .bad { color: var(--bad); }
-  .kv { font-size: 13px; color: var(--muted); }
-  .kv span { color: var(--fg); font-family: ui-monospace, Menlo, monospace; }
-  .naive { margin-top: 10px; font-size: 12px; color: var(--muted); display: flex;
-    align-items: center; gap: 6px; }
-  .naive input { width: auto; }
+  .poster.concert .art {
+    background:
+      conic-gradient(from 155deg at 50% -8%, transparent 0deg, rgba(255,255,255,.22) 6deg, transparent 12deg,
+        transparent 18deg, rgba(255,220,240,.16) 24deg, transparent 30deg, transparent 36deg,
+        rgba(255,255,255,.2) 42deg, transparent 48deg),
+      radial-gradient(ellipse at 50% 100%, rgba(0,0,0,.65), transparent 55%);
+  }
+  .poster.concert .art::after {
+    content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 22%;
+    background: radial-gradient(circle at 8% 100%, #120818 0 22%, transparent 23%), radial-gradient(circle at 24% 100%, #120818 0 26%, transparent 27%),
+      radial-gradient(circle at 42% 100%, #120818 0 20%, transparent 21%), radial-gradient(circle at 60% 100%, #120818 0 27%, transparent 28%),
+      radial-gradient(circle at 78% 100%, #120818 0 22%, transparent 23%), radial-gradient(circle at 95% 100%, #120818 0 25%, transparent 26%);
+  }
+  .ptitle { position: relative; font-weight: 700; font-size: 22px; line-height: 1.05; text-transform: uppercase; letter-spacing: 1px; text-shadow: 0 2px 12px rgba(0,0,0,.5); }
+  .ptag { position: relative; font-size: 11px; opacity: .85; margin-top: 6px; }
+  .poster.concert .ptitle, .poster.concert .ptag { margin-bottom: 18%; }
+  .poster.concert .ptag { margin-bottom: 0; }
+  .poster.concert .ptitle { margin-bottom: 0; }
+  .poster.concert .pwrap { position: relative; margin-bottom: 20%; }
+
+  /* ------------------------------------------------------------------ home */
+  .banner {
+    margin: 20px auto 0; border-radius: 10px; overflow: hidden; color: #fff;
+    background: linear-gradient(100deg, #2b1236 0%, #41295a 45%, #f84464 130%);
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    padding: 28px 32px; min-height: 150px;
+  }
+  .banner small { text-transform: uppercase; letter-spacing: 1.5px; font-size: 11px; opacity: .8; }
+  .banner h2 { font-size: 26px; margin: 6px 0 4px; }
+  .banner p { margin: 0; opacity: .85; font-size: 14px; }
+  .banner .btn { background: #fff; color: var(--ink); }
+  .banner .btn:hover { background: #f2f2f2; }
+  .sec-h { display: flex; align-items: baseline; justify-content: space-between; margin: 32px 0 16px; }
+  .sec-h h2 { font-size: 24px; font-weight: 700; }
+  .sec-h a { color: var(--brand); font-size: 14px; }
+  .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 222px)); gap: 32px 28px; }
+  .card-show { display: block; }
+  .card-show .poster { border-radius: 8px 8px 0 0; }
+  .card-show:hover .poster { filter: brightness(1.06); }
+  .rate { background: #000; color: #fff; font-size: 13px; padding: 7px 10px; border-radius: 0 0 8px 8px; display: flex; gap: 10px; align-items: center; }
+  .rate .star { color: var(--brand); }
+  .rate span:last-child { color: #ccc; }
+  .card-show h3 { font-size: 17px; font-weight: 500; margin: 10px 0 2px; line-height: 1.3; }
+  .card-show p { margin: 0; color: var(--ink-2); font-size: 14px; }
+  .empty { color: var(--ink-3); padding: 40px 0; }
+  footer { margin-top: 56px; background: #333338; color: #a5a5a5; font-size: 12px; }
+  footer .wrap { padding: 24px 16px; display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  footer a { color: #ddd; }
+
+  /* ------------------------------------------------------------- show page */
+  .hero { color: #fff; background: linear-gradient(90deg, var(--hero) 24%, rgba(26,26,26,.85) 50%, rgba(26,26,26,.35)), linear-gradient(135deg, var(--a), var(--b)); }
+  .hero .wrap { display: flex; gap: 36px; padding-top: 36px; padding-bottom: 36px; align-items: center; }
+  .hero-poster { width: 260px; flex-shrink: 0; }
+  .hero-poster .poster { border-radius: 10px 10px 0 0; }
+  .hero-poster .tag { background: #000; text-align: center; font-size: 13px; padding: 6px; border-radius: 0 0 10px 10px; }
+  .hero h1 { font-size: 36px; font-weight: 700; line-height: 1.15; }
+  .ratebox {
+    display: inline-flex; align-items: center; gap: 10px; margin-top: 18px;
+    background: #333; border-radius: 8px; padding: 12px 16px; font-size: 20px; font-weight: 700;
+  }
+  .ratebox .star { color: var(--brand); }
+  .ratebox small { font-size: 14px; font-weight: 400; color: #ccc; }
+  .chips { display: flex; gap: 8px; margin-top: 18px; flex-wrap: wrap; }
+  .chips span { background: #e5e5e5; color: var(--ink); border-radius: 3px; padding: 3px 8px; font-size: 15px; }
+  .meta { margin-top: 14px; font-size: 16px; color: #fff; }
+  .hero .btn { margin-top: 26px; padding: 14px 44px; font-size: 16px; }
+  .about { padding-top: 32px; max-width: 860px; }
+  .about h2, .times-h { font-size: 22px; font-weight: 700; margin-bottom: 10px; }
+  .about p { margin: 0; font-size: 15px; color: var(--ink); line-height: 1.6; }
+  .hr { border-top: 1px solid var(--line); margin: 32px 0; }
+  .venue { background: #fff; border-radius: 6px; padding: 18px 20px; display: flex; gap: 24px; align-items: center; flex-wrap: wrap; }
+  .venue .vn { min-width: 260px; }
+  .venue .vn b { font-weight: 500; font-size: 14px; }
+  .venue .vn div { margin-top: 4px; font-size: 11px; color: var(--ok); }
+  .venue .vn div span + span { color: var(--warn); margin-left: 12px; }
+  .time-pill {
+    border: 1px solid #999; border-radius: 4px; background: #fff; color: var(--ok);
+    padding: 9px 22px; font-size: 13px; text-align: center; line-height: 1.2;
+  }
+  .time-pill small { display: block; color: var(--ink-3); font-size: 10px; margin-top: 2px; }
+  .time-pill:hover { border-color: var(--ok); }
+  .time-pill.on { background: var(--seat); border-color: var(--seat); color: #fff; }
+  .time-pill.on small { color: #e0f5e4; }
+
+  /* ----------------------------------------------------------------- modal */
+  .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,.6); z-index: 50; display: grid; place-items: center; padding: 16px; }
+  .modal { background: #fff; border-radius: 10px; width: 100%; max-width: 520px; padding: 28px 28px 22px; position: relative; text-align: center; }
+  .modal h3 { font-size: 18px; font-weight: 500; }
+  .modal .x { position: absolute; top: 10px; right: 12px; border: 0; background: none; font-size: 24px; color: var(--ink-3); line-height: 1; }
+  .vehicle { font-size: 74px; height: 110px; display: grid; place-items: center; }
+  .nums { display: flex; justify-content: center; gap: 6px; flex-wrap: wrap; }
+  .nums button { width: 34px; height: 34px; border-radius: 50%; border: 0; background: none; font-size: 15px; color: var(--ink); }
+  .nums button:hover { background: #f2f2f2; }
+  .nums button.on { background: var(--brand); color: #fff; }
+  .cats { display: flex; justify-content: center; gap: 28px; flex-wrap: wrap; border-top: 1px solid var(--line); margin: 22px -28px 18px; padding: 16px 28px 0; }
+  .cats div { font-size: 11px; color: var(--ink-3); text-transform: uppercase; display: flex; flex-direction: column; gap: 2px; }
+  .cats b { color: var(--ink); font-size: 14px; font-weight: 500; }
+  .cats .ok { color: var(--ok); text-transform: none; }
+  .cats .warn { color: var(--warn); text-transform: none; }
+  .cats .no { color: var(--ink-3); text-transform: none; }
+
+  .login { text-align: left; }
+  .login h3 { text-align: center; margin-bottom: 26px; font-size: 18px; }
+  .login label { font-size: 13px; color: var(--ink-2); display: block; margin-bottom: 8px; }
+  .phone { display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #ccc; padding: 6px 0; margin-bottom: 26px; }
+  .phone:focus-within { border-color: var(--brand); }
+  .phone span { color: var(--ink-2); }
+  .phone input { border: 0; outline: 0; flex: 1; font: inherit; font-size: 16px; min-width: 0; }
+  .fine { font-size: 11px; color: var(--ink-3); text-align: center; margin: 14px 0 0; }
+
+  /* ------------------------------------------------------------ seat layout */
+  .sp-head { background: var(--head); color: #fff; }
+  .sp-head .wrap { display: flex; align-items: center; gap: 16px; min-height: 64px; padding-top: 10px; padding-bottom: 10px; }
+  .back { font-size: 28px; line-height: 1; color: #fff; padding: 0 6px 4px 0; }
+  .sp-title { font-size: 18px; font-weight: 500; }
+  .sp-sub { font-size: 12px; color: #bbb; margin-top: 2px; }
+  .tix { margin-left: auto; border: 1px solid #fff; background: none; color: #fff; border-radius: 4px; padding: 6px 12px; font-size: 13px; white-space: nowrap; }
+  .sp-times { background: #fff; border-bottom: 1px solid var(--line); }
+  .sp-times .wrap { display: flex; gap: 18px; align-items: center; padding-top: 12px; padding-bottom: 12px; }
+  .day { text-align: center; line-height: 1.1; color: var(--ink-2); font-size: 10px; text-transform: uppercase; }
+  .day b { display: block; font-size: 18px; color: var(--ink); margin: 2px 0; }
+  .layout { background: #fff; padding: 28px 0 150px; min-height: 60vh; }
+  .map { overflow-x: auto; padding: 0 16px; }
+  .map-in { width: max-content; margin: 0 auto; }
+  .cat-h { font-size: 12px; color: var(--ink-3); border-bottom: 1px solid var(--line); padding-bottom: 8px; margin: 22px 0 14px; }
+  .cat:first-child .cat-h { margin-top: 0; }
+  .srow { display: flex; align-items: center; margin-bottom: 6px; }
+  .rl { width: 34px; flex-shrink: 0; font-size: 12px; color: var(--ink-3); }
+  .seats { display: grid; grid-template-columns: repeat(var(--cols), 24px); column-gap: 6px; }
+  .seat {
+    width: 24px; height: 24px; padding: 0; border: 1px solid var(--seat); border-radius: 4px;
+    background: #fff; color: var(--seat); font-size: 10px; line-height: 22px;
+  }
+  .seat:hover:not(:disabled) { background: var(--seat); color: #fff; }
+  .seat.sel { background: var(--seat); color: #fff; }
+  .seat:disabled { background: var(--sold); border-color: var(--sold); color: transparent; cursor: not-allowed; }
+  .screen { margin: 44px auto 0; text-align: center; color: var(--ink-3); font-size: 12px; }
+  .screen svg { display: block; margin: 0 auto 8px; width: min(420px, 100%); }
+  .legend { position: fixed; left: 0; right: 0; bottom: 0; background: #fff; border-top: 1px solid var(--line); z-index: 10; }
+  .legend .wrap { display: flex; justify-content: center; gap: 28px; padding-top: 14px; padding-bottom: 14px; font-size: 12px; color: var(--ink-2); }
+  .legend i { display: inline-block; width: 16px; height: 16px; border-radius: 3px; vertical-align: -3px; margin-right: 6px; }
+  .lg-a { border: 1px solid var(--seat); } .lg-s { background: var(--seat); } .lg-x { background: var(--sold); }
+  .paybar .wrap { justify-content: center; padding-top: 12px; padding-bottom: 12px; }
+  .paybar .btn { width: min(320px, 100%); padding: 12px; }
+
+  /* --------------------------------------------------------------- summary */
+  .sum { display: grid; grid-template-columns: 1fr 380px; gap: 24px; padding-top: 28px; align-items: start; }
+  .panel { background: #fff; border-radius: 8px; padding: 22px 24px; }
+  .panel h3 { font-size: 16px; font-weight: 500; margin-bottom: 18px; }
+  .field { border: 1px solid var(--line); border-radius: 4px; padding: 10px 12px; color: var(--ink-2); }
+  .note { font-size: 12px; color: var(--ink-3); margin-top: 10px; }
+  .sum-h { font-size: 13px; letter-spacing: 1px; color: var(--brand); margin-bottom: 18px; }
+  .line { display: flex; justify-content: space-between; gap: 16px; font-size: 14px; margin-bottom: 12px; }
+  .line small { display: block; color: var(--ink-3); font-size: 12px; margin-top: 2px; }
+  .line.sub { border-top: 1px solid var(--line); padding-top: 14px; font-weight: 500; }
+  .payable { display: flex; justify-content: space-between; background: #fffcdc; margin: 14px -24px 18px; padding: 14px 24px; font-size: 15px; }
+
+  /* --------------------------------------------------------------- ticket */
+  .done { text-align: center; padding-top: 36px; }
+  .done .tick { width: 56px; height: 56px; border-radius: 50%; background: var(--seat); color: #fff; font-size: 30px; display: grid; place-items: center; margin: 0 auto 14px; }
+  .done h2 { font-size: 22px; }
+  .done p { color: var(--ink-2); margin: 6px 0 0; }
+  .ticket { max-width: 400px; margin: 24px auto 0; background: #fff; border-radius: 12px; text-align: left; filter: drop-shadow(0 2px 10px rgba(0,0,0,.06)); }
+  .t-top { display: flex; gap: 16px; padding: 20px; }
+  .t-top .poster { width: 84px; padding: 6px; border-radius: 6px; flex-shrink: 0; }
+  .t-top .poster .ptitle { font-size: 9px; letter-spacing: .3px; }
+  .t-top .poster .ptag { display: none; }
+  .t-top h3 { font-size: 17px; font-weight: 500; line-height: 1.3; }
+  .t-top p { margin: 4px 0 0; font-size: 13px; color: var(--ink-2); }
+  .t-cut { position: relative; border-top: 2px dashed var(--line); margin: 0 18px; }
+  .t-cut::before, .t-cut::after { content: ""; position: absolute; top: -12px; width: 22px; height: 22px; border-radius: 50%; background: var(--bg); }
+  .t-cut::before { left: -30px; } .t-cut::after { right: -30px; }
+  .t-mid { display: flex; gap: 18px; align-items: center; padding: 20px; }
+  .t-mid svg { width: 110px; height: 110px; flex-shrink: 0; }
+  .t-mid .k { font-size: 11px; color: var(--ink-3); text-transform: uppercase; letter-spacing: .5px; }
+  .t-mid .v { font-size: 15px; font-weight: 500; margin-bottom: 10px; }
+  .t-bot { display: flex; justify-content: space-between; border-top: 1px solid var(--line); padding: 14px 20px; font-size: 14px; }
+  .done .btn { margin-top: 26px; }
+
+  .toast {
+    position: fixed; left: 50%; bottom: 80px; transform: translateX(-50%); z-index: 60;
+    background: #222; color: #fff; padding: 12px 18px; border-radius: 6px; font-size: 14px;
+    max-width: calc(100% - 32px); box-shadow: 0 6px 20px rgba(0,0,0,.25);
+  }
+  .loading { padding: 80px 0; text-align: center; color: var(--ink-3); }
+
+  @media (max-width: 860px) {
+    .search, .subnav .r, .city { display: none; }
+    .hero .wrap { flex-direction: column; align-items: flex-start; }
+    .hero-poster { width: 180px; }
+    .hero h1 { font-size: 26px; }
+    .sum { grid-template-columns: 1fr; }
+    .banner { flex-direction: column; align-items: flex-start; padding: 22px; }
+    .cards { grid-template-columns: repeat(2, 1fr); gap: 24px 16px; }
+    .legend .wrap { gap: 16px; }
+  }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <h1>Fair Drop — baseline</h1>
-  <div class="sub">First-come-first-served. No queue, no lottery, no bot defence — by design.</div>
-
-  <div class="grid">
-    <div class="card">
-      <h2>1 · Create a drop</h2>
-      <div class="row">
-        <div>
-          <label for="seats">Seats</label>
-          <input id="seats" type="number" value="500" min="1">
-        </div>
-        <div>
-          <label for="window">Window (sec)</label>
-          <input id="window" type="number" value="300" min="1">
-        </div>
-      </div>
-      <button id="btn-create">Create drop</button>
-      <div class="kv" style="margin-top:10px">drop_id: <span id="drop-id">—</span></div>
-    </div>
-
-    <div class="card">
-      <h2>2 · Log in</h2>
-      <label for="phone">Phone</label>
-      <input id="phone" value="+15550100">
-      <label for="dfp">Device fingerprint</label>
-      <input id="dfp" value="fp-browser-01">
-      <button id="btn-login">Send OTP &amp; verify</button>
-      <div class="kv" style="margin-top:10px">user_id: <span id="user-id">—</span></div>
-    </div>
-
-    <div class="card">
-      <h2>3 · Buy</h2>
-      <div class="seats"><span id="seats-left">—</span><small id="seats-total"></small></div>
-      <div style="margin:8px 0 4px"><span class="pill pending" id="state">no drop</span></div>
-      <button class="buy" id="btn-buy" disabled>Buy a seat</button>
-      <label class="naive"><input type="checkbox" id="naive"> use ?mode=naive (oversells on purpose)</label>
+<header class="top">
+  <div class="wrap">
+    <a href="#/" class="logo"><i></i>fair<b>drop</b></a>
+    <label class="search">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input id="q" type="search" placeholder="Search for Movies, Events, Plays, Sports and Activities">
+    </label>
+    <div class="top-r">
+      <span class="city" id="city">Mumbai ▾</span>
+      <button class="btn sm" id="user"></button>
     </div>
   </div>
+</header>
+<nav class="subnav">
+  <div class="wrap">
+    <a href="#/" class="on">Movies</a><a href="#/">Events</a><a href="#/">Plays</a><a href="#/">Sports</a>
+    <div class="r"><a href="/console">Drop console</a><span>Offers</span><span>Gift Cards</span></div>
+  </div>
+</nav>
 
-  <div class="log" id="log">Ready. Create a drop to begin.</div>
-</div>
+<main id="app"></main>
 
 <script>
-const $ = (id) => document.getElementById(id);
-const state = { dropId: null, token: null, userId: null };
+(() => {
+  const $ = (s, el = document) => el.querySelector(s);
+  const $$ = (s, el = document) => [...el.querySelectorAll(s)];
+  const app = $('#app');
 
-function log(msg, cls) {
-  const el = $("log");
-  const t = new Date().toISOString().slice(11, 23);
-  const line = document.createElement("div");
-  line.innerHTML = `<b>${t}</b> <span class="${cls || ""}"></span>`;
-  line.querySelector("span").textContent = msg;
-  el.prepend(line);
-}
+  const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
-async function api(method, path, body, token) {
-  const headers = {};
-  if (body) headers["Content-Type"] = "application/json";
-  if (token) headers["Authorization"] = "Bearer " + token;
-  const res = await fetch(path, {
-    method,
-    headers,
-    body: body ? JSON.stringify(body) : undefined,
+  // Storage can be blocked (private mode, previews); the site must still work.
+  const kv = (area) => ({
+    get(k) { try { return window[area].getItem(k); } catch { return null; } },
+    set(k, v) { try { v == null ? window[area].removeItem(k) : window[area].setItem(k, v); } catch {} },
   });
-  let data = null;
-  try { data = await res.json(); } catch (_) { /* empty body */ }
-  return { status: res.status, data };
-}
+  const local = kv('localStorage'), session = kv('sessionStorage');
 
-$("btn-create").onclick = async () => {
-  const { status, data } = await api("POST", "/admin/drops", {
-    seats: Number($("seats").value),
-    window_sec: Number($("window").value),
+  // ------------------------------------------------------------- formatting
+  const TZ = 'Asia/Kolkata';
+  const rupees = (p) => '₹' + (p / 100).toLocaleString('en-IN', { maximumFractionDigits: 0 });
+  const rs = (p) => 'Rs. ' + (p / 100).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const fmtDay = (iso) => new Date(iso).toLocaleDateString('en-IN', { timeZone: TZ, weekday: 'short', day: '2-digit', month: 'short' });
+  const fmtTime = (iso) => new Date(iso).toLocaleTimeString('en-IN', { timeZone: TZ, hour: '2-digit', minute: '2-digit', hour12: true }).toUpperCase();
+  const dayParts = (iso) => {
+    const d = new Date(iso), o = { timeZone: TZ };
+    return {
+      wd: d.toLocaleDateString('en-IN', { ...o, weekday: 'short' }),
+      dd: d.toLocaleDateString('en-IN', { ...o, day: '2-digit' }),
+      mon: d.toLocaleDateString('en-IN', { ...o, month: 'short' }),
+    };
+  };
+  const dur = (m) => `${Math.floor(m / 60)}h ${m % 60}m`;
+  const plural = (n, w) => `${n} ${w}${n === 1 ? '' : 's'}`;
+
+  // --------------------------------------------------------------------- api
+  async function api(path, { method = 'GET', body, auth = false } = {}) {
+    const headers = { 'Content-Type': 'application/json' };
+    const tok = local.get('fd_token');
+    if (auth && tok) headers.Authorization = 'Bearer ' + tok;
+    const res = await fetch(path, { method, headers, body: body ? JSON.stringify(body) : undefined });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      if (res.status === 401) signOut(true);
+      const e = new Error(data.error || res.statusText); e.status = res.status; throw e;
+    }
+    return data;
+  }
+
+  // ------------------------------------------------------------------ ui bits
+  let toastTimer;
+  function toast(msg) {
+    let t = $('.toast');
+    if (!t) { t = document.createElement('div'); t.className = 'toast'; document.body.appendChild(t); }
+    t.textContent = msg;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.remove(), 3500);
+  }
+
+  function modal(html, cls = '') {
+    const bg = document.createElement('div');
+    bg.className = 'modal-bg';
+    bg.innerHTML = `<div class="modal ${cls}" role="dialog" aria-modal="true">${html}</div>`;
+    bg.addEventListener('click', (e) => { if (e.target === bg) close(); });
+    const onKey = (e) => { if (e.key === 'Escape') close(); };
+    document.addEventListener('keydown', onKey);
+    function close() { bg.remove(); document.removeEventListener('keydown', onKey); }
+    document.body.appendChild(bg);
+    return { el: bg, close };
+  }
+
+  function poster(sh, cls = '') {
+    const [main, ...rest] = sh.title.split(':');
+    const sub = rest.join(':').trim() || sh.tagline;
+    return `<div class="poster ${sh.kind} ${cls}" style="--a:${esc(sh.poster_from)};--b:${esc(sh.poster_to)}">
+      <div class="art"></div>
+      <div class="${sh.kind === 'concert' ? 'pwrap' : ''}" style="position:relative">
+        <div class="ptitle">${esc(main)}</div>
+        <div class="ptag">${esc(sub)}</div>
+      </div>
+    </div>`;
+  }
+
+  // ------------------------------------------------------------------- auth
+  const userBtn = $('#user');
+  function renderUser() {
+    const phone = local.get('fd_phone');
+    if (phone) {
+      userBtn.className = 'user-btn';
+      userBtn.textContent = 'Hi, ' + phone.slice(0, 2) + '••••' + phone.slice(-4);
+    } else {
+      userBtn.className = 'btn sm';
+      userBtn.textContent = 'Sign in';
+    }
+  }
+  function signOut(silent) {
+    local.set('fd_token', null); local.set('fd_phone', null); renderUser();
+    if (!silent) toast('Signed out');
+  }
+  userBtn.addEventListener('click', () => {
+    if (local.get('fd_token')) { if (confirm('Sign out?')) signOut(); }
+    else login().catch(() => {});
   });
-  if (status !== 200) { log("create failed: " + JSON.stringify(data), "bad"); return; }
-  state.dropId = data.drop_id;
-  $("drop-id").textContent = data.drop_id;
-  log(`drop ${data.drop_id} created — ${data.seats} seats, opens ${data.opens_at}`, "ok");
-  refresh();
-};
 
-$("btn-login").onclick = async () => {
-  const { status, data } = await api("POST", "/auth/otp", {
-    phone: $("phone").value,
-    device_fp: $("dfp").value,
-  });
-  if (status !== 200) { log("login failed: " + JSON.stringify(data), "bad"); return; }
-  state.token = data.token;
-  state.userId = data.user_id;
-  $("user-id").textContent = data.user_id;
-  log(`logged in as ${data.user_id}`, "ok");
-  syncBuyButton();
-};
+  function deviceFP() {
+    let fp = local.get('fd_device');
+    if (!fp) { fp = 'web-' + Math.random().toString(36).slice(2, 10); local.set('fd_device', fp); }
+    return fp;
+  }
 
-$("btn-buy").onclick = async () => {
-  const mode = $("naive").checked ? "?mode=naive" : "";
-  const { status, data } = await api(
-    "POST", `/baseline/${state.dropId}/buy${mode}`, null, state.token);
-  if (status === 200) log(`got seat #${data.seat_no}`, "ok");
-  else log(`buy rejected (${status}): ${data && data.error}`, "bad");
-  refresh();
-};
+  // login resolves once the user has a token, or rejects if they dismiss it.
+  function login() {
+    if (local.get('fd_token')) return Promise.resolve();
+    return new Promise((resolve, reject) => {
+      const m = modal(`
+        <button class="x" aria-label="Close">×</button>
+        <h3>Get Started</h3>
+        <form>
+          <label for="ph">Continue with mobile number</label>
+          <div class="phone"><span>+91</span><input id="ph" inputmode="numeric" maxlength="10" placeholder="Enter mobile number" autocomplete="tel-national"></div>
+          <button class="btn block" disabled>Continue</button>
+          <p class="fine">Demo sign-in: no OTP is sent. Your number only ties bookings to you.</p>
+        </form>`, 'login');
+      let done = false;
+      const close = () => { m.close(); if (!done) reject(new Error('dismissed')); };
+      $('.x', m.el).onclick = close;
+      m.el.addEventListener('click', (e) => { if (e.target === m.el) close(); });
+      const input = $('#ph', m.el), go = $('form .btn', m.el);
+      input.focus();
+      input.addEventListener('input', () => {
+        input.value = input.value.replace(/\D/g, '');
+        go.disabled = input.value.length !== 10;
+      });
+      $('form', m.el).addEventListener('submit', async (e) => {
+        e.preventDefault();
+        go.disabled = true; go.textContent = 'Signing in…';
+        try {
+          const r = await api('/auth/otp', { method: 'POST', body: { phone: '+91' + input.value, device_fp: deviceFP() } });
+          local.set('fd_token', r.token); local.set('fd_phone', input.value);
+          renderUser(); done = true; m.close(); resolve();
+        } catch {
+          go.disabled = false; go.textContent = 'Continue'; toast('Could not sign in. Try again.');
+        }
+      });
+    });
+  }
 
-function syncBuyButton() {
-  $("btn-buy").disabled = !(state.dropId && state.token);
-}
+  // --------------------------------------------------------------- routing
+  let cleanup = null;
+  const routes = [
+    [/^\/?$/, home],
+    [/^\/show\/([\w-]+)$/, showPage],
+    [/^\/show\/([\w-]+)\/seats\/(\d+)$/, seatPage],
+    [/^\/show\/([\w-]+)\/summary$/, summaryPage],
+    [/^\/booking\/(\w+)$/, ticketPage],
+  ];
+  function route() {
+    if (cleanup) { cleanup(); cleanup = null; }
+    $$('.modal-bg').forEach((m) => m.remove());
+    const path = location.hash.replace(/^#/, '') || '/';
+    $('#q').closest('.search').style.visibility = path === '/' ? '' : 'hidden';
+    for (const [re, fn] of routes) {
+      const m = path.match(re);
+      if (m) { window.scrollTo(0, 0); return fn(...m.slice(1)); }
+    }
+    location.hash = '#/';
+  }
+  window.addEventListener('hashchange', route);
 
-async function refresh() {
-  if (!state.dropId) return;
-  const { status, data } = await api("GET", `/drops/${state.dropId}`);
-  if (status !== 200) return;
-  $("seats-left").textContent = data.seats_left;
-  $("seats-total").textContent = ` / ${data.seats} left`;
-  const pill = $("state");
-  pill.textContent = data.state.replace("_", " ");
-  pill.className = "pill " + data.state;
-  syncBuyButton();
-}
+  const loading = () => { app.innerHTML = '<div class="loading">Loading…</div>'; };
+  const failed = (msg = 'Something went wrong. Is the server running?') => {
+    app.innerHTML = `<div class="wrap loading">${esc(msg)}<br><br><a class="btn sm" href="#/">Back to home</a></div>`;
+  };
 
-// Live seats_left poll, once a second.
-setInterval(refresh, 1000);
+  // ------------------------------------------------------------------ home
+  async function home() {
+    loading();
+    let shows;
+    try { shows = (await api('/api/shows')).shows; } catch { return failed(); }
+    const concert = shows.find((s) => s.kind === 'concert');
+    app.innerHTML = `
+      <div class="wrap">
+        ${concert ? `
+        <a class="banner" href="#/show/${esc(concert.id)}">
+          <div>
+            <small>Live in ${esc(concert.city)} · ${esc(fmtDay(concert.starts_at))}</small>
+            <h2>${esc(concert.title)}</h2>
+            <p>${esc(concert.tagline)} Seats from ${rupees(concert.min_price_paise)}.</p>
+          </div>
+          <span class="btn">Book now</span>
+        </a>` : ''}
+        <div class="sec-h"><h2>Recommended Shows</h2><a href="#/">See All ›</a></div>
+        <div class="cards" id="cards">
+          ${shows.map((s) => `
+            <a class="card-show" href="#/show/${esc(s.id)}" data-title="${esc(s.title.toLowerCase())}">
+              ${poster(s)}
+              <div class="rate"><span><span class="star">★</span> ${s.rating.toFixed(1)}/10</span><span>${esc(s.votes)} ${s.kind === 'concert' ? 'Interested' : 'Votes'}</span></div>
+              <h3>${esc(s.title)}</h3>
+              <p>${esc(s.genres.replace(/, /g, '/'))}</p>
+            </a>`).join('')}
+        </div>
+        <div class="empty hidden" id="none">No shows match your search.</div>
+      </div>
+      ${footer()}`;
+    const q = $('#q');
+    const filter = () => {
+      const v = q.value.trim().toLowerCase();
+      let n = 0;
+      $$('.card-show').forEach((c) => { const hit = c.dataset.title.includes(v); c.classList.toggle('hidden', !hit); n += hit; });
+      $('#none').classList.toggle('hidden', n > 0);
+    };
+    q.oninput = filter;
+    filter();
+  }
+
+  const footer = () => `<footer><div class="wrap"><span>fairdrop · a demo ticketing site. Seat data lives in Postgres (Neon).</span><a href="/console">Baseline drop console →</a></div></footer>`;
+
+  // ------------------------------------------------------------- show page
+  async function showPage(id) {
+    loading();
+    let m;
+    try { m = await api('/api/shows/' + id); } catch (e) { return failed(e.status === 404 ? 'That show does not exist.' : undefined); }
+    const s = m.show, isMovie = s.kind === 'movie';
+    app.innerHTML = `
+      <section class="hero" style="--a:${esc(s.poster_from)};--b:${esc(s.poster_to)}">
+        <div class="wrap">
+          <div class="hero-poster">${poster(s)}<div class="tag">${isMovie ? 'In cinemas' : 'Live event'}</div></div>
+          <div>
+            <h1>${esc(s.title)}</h1>
+            <div class="ratebox"><span class="star">★</span> ${s.rating.toFixed(1)}/10 <small>(${esc(s.votes)} ${isMovie ? 'Votes' : 'Interested'}) ›</small></div>
+            <div class="chips"><span>${esc(s.format)}</span>${s.language.split(', ').map((l) => `<span>${esc(l)}</span>`).join('')}</div>
+            <div class="meta">${dur(s.duration_min)} • ${esc(s.genres)} • ${esc(s.certificate)} • ${esc(fmtDay(s.starts_at))}</div>
+            <button class="btn" id="book">Book tickets</button>
+          </div>
+        </div>
+      </section>
+      <div class="wrap">
+        <div class="about">
+          <h2>About the ${isMovie ? 'movie' : 'event'}</h2>
+          <p>${esc(s.about)}</p>
+        </div>
+        <div class="hr"></div>
+        <h2 class="times-h">${isMovie ? 'Showtimes' : 'Venue'} · ${esc(fmtDay(s.starts_at))}</h2>
+        <div class="venue">
+          <div class="vn"><b>${esc(s.venue)}, ${esc(s.city)}</b><div><span>M-Ticket</span><span>${isMovie ? 'Food & Beverage' : 'Gates open 90 min early'}</span></div></div>
+          <button class="time-pill" id="pill">${fmtTime(s.starts_at)}<small>${esc(s.format)}</small></button>
+          <span style="font-size:12px;color:var(--ink-3)">${plural(s.seats_left, 'seat')} left</span>
+        </div>
+      </div>
+      ${footer()}`;
+    const open = () => seatCountModal(m, 2, (n) => { location.hash = `#/show/${id}/seats/${n}`; });
+    $('#book').onclick = open;
+    $('#pill').onclick = open;
+  }
+
+  // ------------------------------------------------- "How many seats?" modal
+  const VEHICLES = ['🚲', '🛵', '🛺', '🚗', '🚗', '🚙', '🚐', '🚐', '🚌', '🚌'];
+  function seatCountModal(m, initial, onPick) {
+    let n = initial;
+    const avail = {};
+    for (const r of m.rows) for (const st of r.seats) {
+      const a = (avail[r.category] ||= { left: 0, total: 0 });
+      a.total++; if (st.status === 'available') a.left++;
+    }
+    const label = (a) => !a || a.left === 0 ? '<span class="no">Sold out</span>'
+      : a.left / a.total < 0.25 ? '<span class="warn">Filling fast</span>' : '<span class="ok">Available</span>';
+    const md = modal(`
+      <button class="x" aria-label="Close">×</button>
+      <h3>How many seats?</h3>
+      <div class="vehicle" id="veh"></div>
+      <div class="nums">${Array.from({ length: 10 }, (_, i) => `<button data-n="${i + 1}">${i + 1}</button>`).join('')}</div>
+      <div class="cats">${m.categories.map((c) => `<div>${esc(c.name)}<b>${rupees(c.price_paise)}</b>${label(avail[c.code])}</div>`).join('')}</div>
+      <button class="btn block" id="go">Select Seats</button>`);
+    const paint = () => {
+      $('#veh', md.el).textContent = VEHICLES[n - 1];
+      $$('.nums button', md.el).forEach((b) => b.classList.toggle('on', +b.dataset.n === n));
+    };
+    $$('.nums button', md.el).forEach((b) => b.onclick = () => { n = +b.dataset.n; paint(); });
+    $('.x', md.el).onclick = md.close;
+    $('#go', md.el).onclick = () => { md.close(); onPick(n); };
+    paint();
+  }
+
+  // ----------------------------------------------------------- seat layout
+  async function seatPage(id, wantStr) {
+    const want = Math.min(10, Math.max(1, +wantStr || 1));
+    loading();
+    let m;
+    try { m = await api('/api/shows/' + id); } catch { return failed(); }
+    const s = m.show, isMovie = s.kind === 'movie';
+    const price = Object.fromEntries(m.categories.map((c) => [c.code, c]));
+    const seatCat = {};     // seat id -> category code
+    let sold = new Set();
+    const index = () => {
+      sold = new Set();
+      for (const r of m.rows) for (const st of r.seats) { seatCat[st.id] = r.category; if (st.status !== 'available') sold.add(st.id); }
+    };
+    index();
+
+    // Keep a selection made before signing in or after a failed payment.
+    let selected = new Set();
+    try {
+      const p = JSON.parse(session.get('fd_pending') || 'null');
+      if (p && p.show === id && p.seats.length <= want) selected = new Set(p.seats.filter((x) => !sold.has(x)));
+    } catch {}
+
+    const dp = dayParts(s.starts_at);
+    app.innerHTML = `
+      <div class="sp-head"><div class="wrap">
+        <a class="back" href="#/show/${esc(id)}" aria-label="Back">‹</a>
+        <div><div class="sp-title">${esc(s.title)}</div><div class="sp-sub">${esc(s.venue)}, ${esc(s.city)} | ${esc(fmtDay(s.starts_at))}, ${fmtTime(s.starts_at)}</div></div>
+        <button class="tix" id="tix">${plural(want, 'Ticket')} ✎</button>
+      </div></div>
+      <div class="sp-times"><div class="wrap">
+        <div class="day">${esc(dp.wd)}<b>${esc(dp.dd)}</b>${esc(dp.mon)}</div>
+        <span class="time-pill on">${fmtTime(s.starts_at)}<small>${esc(s.format)}</small></span>
+      </div></div>
+      <div class="layout"><div class="map"><div class="map-in" id="map"></div></div></div>
+      <div class="legend" id="legend"><div class="wrap">
+        <span><i class="lg-a"></i>Available</span><span><i class="lg-s"></i>Selected</span><span><i class="lg-x"></i>Sold</span>
+      </div></div>
+      <div class="legend paybar hidden" id="paybar"><div class="wrap"><button class="btn" id="pay"></button></div></div>`;
+
+    const rowsByCat = (code) => m.rows.filter((r) => r.category === code);
+    function draw() {
+      $('#map').innerHTML = m.categories.map((c) => `
+        <div class="cat">
+          <div class="cat-h">${rupees(c.price_paise)} ${esc(c.name.toUpperCase())}</div>
+          ${rowsByCat(c.code).map((r) => `
+            <div class="srow"><span class="rl">${esc(r.label)}</span>
+              <div class="seats" style="--cols:${m.cols}">
+                ${r.seats.map((st) => {
+                  const isSold = sold.has(st.id);
+                  return `<button class="seat${selected.has(st.id) ? ' sel' : ''}" style="grid-column:${st.col}" data-id="${esc(st.id)}"
+                    ${isSold ? 'disabled' : ''} aria-label="${esc(st.id)}${isSold ? ' sold' : ''}">${st.num}</button>`;
+                }).join('')}
+              </div>
+            </div>`).join('')}
+        </div>`).join('') + `
+        <div class="screen">
+          <svg viewBox="0 0 420 26" aria-hidden="true"><defs><linearGradient id="sg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#cfe3ff"/><stop offset="1" stop-color="#eef5ff"/></linearGradient></defs><path d="M2 24 L24 2 H396 L418 24 Z" fill="url(#sg)" stroke="#b5d0f5"/>${isMovie ? '' : '<text x="210" y="18" text-anchor="middle" font-size="11" fill="#5a7aa8" letter-spacing="3">STAGE</text>'}</svg>
+          ${isMovie ? 'All eyes this way please!' : 'Stage this way'}
+        </div>`;
+      const total = [...selected].reduce((t, x) => t + price[seatCat[x]].price_paise, 0);
+      const full = selected.size === want;
+      $('#paybar').classList.toggle('hidden', !full);
+      $('#legend').classList.toggle('hidden', full);
+      $('#pay').textContent = `Pay ${rupees(total)}`;
+    }
+
+    // Seat picking follows the familiar rule: a click fills the remaining
+    // count with adjacent free seats to the right, within one category.
+    $('#map').addEventListener('click', (e) => {
+      const b = e.target.closest('.seat');
+      if (!b || b.disabled) return;
+      const sid = b.dataset.id;
+      if (selected.has(sid)) { selected.delete(sid); return draw(); }
+      const cat = seatCat[sid];
+      if (selected.size >= want || [...selected].some((x) => seatCat[x] !== cat)) selected.clear();
+      const row = m.rows.find((r) => r.seats.some((x) => x.id === sid));
+      const i = row.seats.findIndex((x) => x.id === sid);
+      for (let j = i; j < row.seats.length && selected.size < want; j++) {
+        const st = row.seats[j];
+        if (j > i && st.col !== row.seats[j - 1].col + 1) break;
+        if (sold.has(st.id) || selected.has(st.id)) break;
+        selected.add(st.id);
+      }
+      draw();
+    });
+
+    $('#tix').onclick = () => seatCountModal(m, want, (n) => {
+      session.set('fd_pending', null);
+      location.hash = `#/show/${id}/seats/${n}`;
+    });
+
+    $('#pay').onclick = async () => {
+      session.set('fd_pending', JSON.stringify({ show: id, want, seats: [...selected] }));
+      try { await login(); } catch { return; }
+      location.hash = `#/show/${id}/summary`;
+    };
+
+    draw();
+
+    // Other buyers are booking too: refresh the map so sold seats grey out.
+    const timer = setInterval(async () => {
+      try {
+        m = await api('/api/shows/' + id);
+        index();
+        const lost = [...selected].filter((x) => sold.has(x));
+        if (lost.length) { lost.forEach((x) => selected.delete(x)); toast(`Seat ${lost.join(', ')} was just booked by someone else.`); }
+        draw();
+      } catch {}
+    }, 5000);
+    cleanup = () => clearInterval(timer);
+  }
+
+  // ------------------------------------------------------- booking summary
+  async function summaryPage(id) {
+    let p;
+    try { p = JSON.parse(session.get('fd_pending') || 'null'); } catch {}
+    if (!p || p.show !== id || !p.seats.length) { location.hash = `#/show/${id}`; return; }
+    if (!local.get('fd_token')) {
+      try { await login(); } catch { location.hash = `#/show/${id}/seats/${p.want}`; return; }
+    }
+    loading();
+    let m;
+    try { m = await api('/api/shows/' + id); } catch { return failed(); }
+    const s = m.show;
+    const catOf = {};
+    for (const r of m.rows) for (const st of r.seats) catOf[st.id] = r.category;
+    const groups = m.categories.map((c) => ({ c, seats: p.seats.filter((x) => catOf[x] === c.code) })).filter((g) => g.seats.length);
+    const tickets = groups.reduce((t, g) => t + g.c.price_paise * g.seats.length, 0);
+    const fee = 3540 * p.seats.length;
+    const total = tickets + fee;
+
+    app.innerHTML = `
+      <div class="sp-head"><div class="wrap">
+        <a class="back" href="#/show/${esc(id)}/seats/${p.want}" aria-label="Back">‹</a>
+        <div><div class="sp-title">${esc(s.title)}</div><div class="sp-sub">${esc(s.venue)}, ${esc(s.city)} | ${esc(fmtDay(s.starts_at))}, ${fmtTime(s.starts_at)}</div></div>
+      </div></div>
+      <div class="wrap sum">
+        <div class="panel">
+          <h3>Share your contact details</h3>
+          <div class="field">+91 ${esc(local.get('fd_phone') || '')}</div>
+          <div class="note">Your M-Ticket appears on the next screen. This is a demo checkout, so no payment is taken.</div>
+        </div>
+        <div class="panel">
+          <div class="sum-h">BOOKING SUMMARY</div>
+          ${groups.map((g) => `<div class="line"><span>${esc(g.c.name.toUpperCase())} - ${esc(g.seats.join(', '))}<small>(${plural(g.seats.length, 'Ticket')})</small></span><span>${rs(g.c.price_paise * g.seats.length)}</span></div>`).join('')}
+          <div class="line"><span>Convenience fees<small>₹30 + 18% GST per ticket</small></span><span>${rs(fee)}</span></div>
+          <div class="line sub"><span>Sub total</span><span>${rs(total)}</span></div>
+          <div class="payable"><span>Amount Payable</span><b>${rs(total)}</b></div>
+          <button class="btn block" id="confirm">Proceed to pay ${rupees(total)}</button>
+        </div>
+      </div>`;
+
+    $('#confirm').onclick = async (e) => {
+      const b = e.currentTarget;
+      b.disabled = true; b.textContent = 'Confirming your seats…';
+      try {
+        const bk = await api(`/api/shows/${id}/book`, { method: 'POST', auth: true, body: { seats: p.seats } });
+        session.set('fd_pending', null);
+        location.hash = '#/booking/' + bk.id;
+      } catch (err) {
+        if (err.status === 409) {
+          toast('Sorry, some of those seats were just booked. Please pick again.');
+          session.set('fd_pending', null);
+          location.hash = `#/show/${id}/seats/${p.want}`;
+        } else if (err.status === 401) {
+          toast('Please sign in again.');
+          b.disabled = false; b.textContent = `Proceed to pay ${rupees(total)}`;
+        } else {
+          toast('Booking failed. Please try again.');
+          b.disabled = false; b.textContent = `Proceed to pay ${rupees(total)}`;
+        }
+      }
+    };
+  }
+
+  // ---------------------------------------------------------------- ticket
+  function qr(seed) {
+    let h = 2166136261;
+    for (const ch of seed) h = Math.imul(h ^ ch.charCodeAt(0), 16777619);
+    const rnd = () => ((h = Math.imul(h ^ (h >>> 15), 2246822507) ^ Math.imul(h ^ (h >>> 13), 3266489909)) >>> 0) / 4294967296;
+    const N = 25, finder = (x, y) => [[0, 0], [N - 7, 0], [0, N - 7]].some(([fx, fy]) => x >= fx && x < fx + 7 && y >= fy && y < fy + 7);
+    let cells = '';
+    for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) if (!finder(x, y) && rnd() < 0.5) cells += `M${x} ${y}h1v1h-1z`;
+    const eye = (x, y) => `<rect x="${x + .5}" y="${y + .5}" width="6" height="6" fill="none" stroke="#222"/><rect x="${x + 2}" y="${y + 2}" width="3" height="3" fill="#222"/>`;
+    return `<svg viewBox="-1 -1 ${N + 2} ${N + 2}" shape-rendering="crispEdges" aria-label="Ticket code"><rect x="-1" y="-1" width="${N + 2}" height="${N + 2}" fill="#fff"/><path d="${cells}" fill="#222"/>${eye(0, 0)}${eye(N - 7, 0)}${eye(0, N - 7)}</svg>`;
+  }
+
+  async function ticketPage(bid) {
+    if (!local.get('fd_token')) {
+      try { await login(); } catch { location.hash = '#/'; return; }
+    }
+    loading();
+    let b;
+    try { b = await api('/api/bookings/' + bid, { auth: true }); } catch (e) { return failed(e.status === 404 ? 'Booking not found on this account.' : undefined); }
+    const s = b.show;
+    let m;
+    try { m = await api('/api/shows/' + s.id); } catch { return failed(); }
+    const catOf = {};
+    for (const r of m.rows) for (const st of r.seats) catOf[st.id] = r.category;
+    const seatLine = m.categories.map((c) => ({ c, seats: b.seats.filter((x) => catOf[x] === c.code) }))
+      .filter((g) => g.seats.length).map((g) => `${g.c.name.toUpperCase()} - ${g.seats.join(', ')}`).join(' · ');
+
+    app.innerHTML = `
+      <div class="wrap done">
+        <div class="tick">✓</div>
+        <h2>Booking confirmed!</h2>
+        <p>Your M-Ticket is below. Show the code at the entrance.</p>
+        <div class="ticket">
+          <div class="t-top">
+            ${poster(s)}
+            <div>
+              <h3>${esc(s.title)}</h3>
+              <p>${esc(s.language.split(', ')[0])}, ${esc(s.format)} · ${esc(s.certificate)}</p>
+              <p><b style="color:var(--ink);font-weight:500">${esc(fmtDay(s.starts_at))} | ${fmtTime(s.starts_at)}</b></p>
+              <p>${esc(s.venue)}, ${esc(s.city)}</p>
+            </div>
+          </div>
+          <div class="t-cut"></div>
+          <div class="t-mid">
+            ${qr(b.id)}
+            <div>
+              <div class="k">${plural(b.seats.length, 'Ticket')}</div><div class="v">${esc(seatLine)}</div>
+              <div class="k">Booking ID</div><div class="v">${esc(b.id)}</div>
+            </div>
+          </div>
+          <div class="t-bot"><span>Total Amount</span><b>${rs(b.total_paise)}</b></div>
+        </div>
+        <a class="btn" href="#/">Back to home</a>
+      </div>`;
+  }
+
+  renderUser();
+  route();
+})();
 </script>
 </body>
 </html>

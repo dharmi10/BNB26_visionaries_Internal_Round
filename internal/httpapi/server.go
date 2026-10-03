@@ -11,6 +11,7 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
+	"github.com/fairdrop/fairdrop/internal/booking"
 	"github.com/fairdrop/fairdrop/internal/config"
 	"github.com/fairdrop/fairdrop/internal/store"
 	"github.com/fairdrop/fairdrop/web"
@@ -23,13 +24,15 @@ import (
 type Server struct {
 	cfg     config.Config
 	store   *store.Store
+	book    *booking.Store // nil disables the ticketing routes
 	metrics *metrics
 	router  chi.Router
 }
 
-// New builds the Server and its routes.
-func New(cfg config.Config, st *store.Store) *Server {
-	s := &Server{cfg: cfg, store: st, metrics: newMetrics()}
+// New builds the Server and its routes. bk may be nil, in which case only the
+// baseline drop API and operator console are served.
+func New(cfg config.Config, st *store.Store, bk *booking.Store) *Server {
+	s := &Server{cfg: cfg, store: st, book: bk, metrics: newMetrics()}
 	s.routes()
 	return s
 }
@@ -61,9 +64,28 @@ func (s *Server) routes() {
 		pr.Post("/baseline/{id}/buy", s.handleBuy)
 	})
 
-	r.Method(http.MethodGet, "/", http.FileServer(http.FS(web.Files)))
+	if s.book != nil {
+		r.Get("/api/shows", s.handleListShows)
+		r.Get("/api/shows/{id}", s.handleSeatMap)
+		r.Group(func(pr chi.Router) {
+			pr.Use(s.requireAuth)
+			pr.Post("/api/shows/{id}/book", s.handleBook)
+			pr.Get("/api/bookings/{id}", s.handleGetBooking)
+		})
+	}
+
+	// The ticketing site is a single page; the operator console for the
+	// baseline drop lives at /console.
+	r.Get("/", serveFile("index.html"))
+	r.Get("/console", serveFile("console.html"))
 
 	s.router = r
+}
+
+func serveFile(name string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFileFS(w, r, web.Files, name)
+	}
 }
 
 // ------------------------------------------------------------------ plumbing

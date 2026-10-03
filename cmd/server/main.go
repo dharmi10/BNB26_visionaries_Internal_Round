@@ -10,6 +10,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/fairdrop/fairdrop/internal/booking"
 	"github.com/fairdrop/fairdrop/internal/config"
 	"github.com/fairdrop/fairdrop/internal/httpapi"
 	"github.com/fairdrop/fairdrop/internal/store"
@@ -30,9 +31,26 @@ func main() {
 		log.Fatalf("loading lua scripts: %v", err)
 	}
 
+	var bk *booking.Store
+	if cfg.DatabaseURL != "" {
+		var err error
+		// A suspended Neon compute can take a few seconds to wake.
+		bk, err = booking.Open(context.Background(), cfg.DatabaseURL, 60*time.Second)
+		if err != nil {
+			log.Fatalf("postgres unreachable: %v", err)
+		}
+		defer bk.Close()
+		if err := migrate(bk, 5, 30*time.Second); err != nil {
+			log.Fatalf("migrating postgres: %v", err)
+		}
+		log.Println("ticketing enabled: postgres schema ready, seed shows loaded")
+	} else {
+		log.Println("DATABASE_URL not set: ticketing disabled, baseline drop API only")
+	}
+
 	srv := &http.Server{
 		Addr:    cfg.Addr,
-		Handler: httpapi.New(cfg, st),
+		Handler: httpapi.New(cfg, st, bk),
 
 		ReadHeaderTimeout: cfg.ReadHeaderTimeout,
 		ReadTimeout:       cfg.ReadTimeout,
@@ -76,4 +94,22 @@ func waitForRedis(st *store.Store, budget time.Duration) error {
 		}
 		time.Sleep(250 * time.Millisecond)
 	}
+}
+
+// migrate runs the idempotent schema+seed step with a per-attempt deadline.
+// A connection that dies mid-query never answers, so without the deadline
+// startup hangs forever; cancelling discards that connection and the next
+// attempt dials a fresh one.
+func migrate(bk *booking.Store, attempts int, perAttempt time.Duration) error {
+	var err error
+	for i := 1; i <= attempts; i++ {
+		ctx, cancel := context.WithTimeout(context.Background(), perAttempt)
+		err = bk.Migrate(ctx)
+		cancel()
+		if err == nil {
+			return nil
+		}
+		log.Printf("migrate attempt %d/%d failed: %v", i, attempts, err)
+	}
+	return err
 }
