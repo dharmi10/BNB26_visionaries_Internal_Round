@@ -1,53 +1,56 @@
 # Fair Drop demo readiness
 
-Branch `demo-ready`. Status as of 2026-10-04. Sorted as **working** (verified in a result file or by a test that actually ran), **broken** (a verified defect or missing result), and **unverified** (code exists but was not exercised here).
+Branch `demo-ready`. Updated 2026-10-04 after a live pass with Docker running.
 
-**Environment this session:** Docker Desktop was not running, so no live stack was started or tested. Nothing in this file was re-run live; live statements come from result files already on disk (`reports/`). Host services were not touched.
+Status labels: **working** (checked in this session, or in a result file from this session), **broken** (a verified defect), **unverified** (not checked, or checked only by reading code).
 
 ## Working
 
 | Area | Evidence |
 |---|---|
-| Exp2 proxy flood, 10,000 identities (Fair Drop vs FCFS) | `reports/exp2_proxy_flood/summary.md`. FCFS bot advantage 9.9 modelled, 9.2 live. Fair Drop 0.92 expected, 0.60 one draw. |
-| Exp4 one human among bots | `reports/exp4_one_human/summary.md`, committed in `3183854`. 1 human, 20 bot identities, 5 operators, 10 seats. FCFS: bots take 10/10. Fair Drop expected human win rate 0.465; the actual draw gave the human a seat. |
-| Exp6 kill replica (api-2 killed mid-window) | `reports/exp6_kill_replica/summary.md`. 20,000 acknowledged receipts, 0 missing from the Merkle tree (client error count not checked). Existing run; not re-run this session. |
-| 50,000-entry lock and draw timing test | Committed in `4655029`. Skips without a Redis stack (`no REDIS_ADDR`). Only the skip was observed here. |
-| Live counters for bot visibility (code path) | Read, not run: rate limiting (`guard.go` → `rate_limited` in the live hash), reused-token rejection (`lua.go` → `rejected_reused`), tarpit hits (`lua.go` → `tarpit_hits`). `LiveTab.tsx` displays all three. |
+| Stack start | `scripts/start.sh` brought up api1–3, worker, frontend, nginx, redis, postgres, prometheus, grafana, attack. Gateway `/api/healthz` and frontend `/` return 200. The compose file defines no healthchecks, so "healthy" means those HTTP checks passed. |
+| Exp2 proxy flood, 10,000 identities | `reports/exp2_proxy_flood/summary.md` (committed earlier). FCFS bot advantage 9.9 modelled, 9.2 live. Fair Drop 0.92 expected, 0.60 for the actual draw. |
+| Exp4 one human among bots | `reports/exp4_one_human/summary.md`, committed `3183854`. FCFS: bots take 10/10 seats. Fair Drop expected human win rate 0.465; the actual draw gave the human a seat. |
+| Exp6 kill replica | `reports/exp6_kill_replica/summary.md` (earlier run, not repeated this session). 20,000 acknowledged receipts, 0 missing from the tree. |
+| 50,000-entry lock and draw | Run with Redis up: `TestLockAndDrawAt50kEntries` PASS. 50,000 entries: lock (`doLock`) 1.094 s, draw (`doDraw`) 3.288 s, total 4.382 s, 50,000 ranked, test wall time 5.73 s. |
+| Exp7 malicious server (rerun) | `reports/exp7_malicious_server/summary.md`, committed with this pass. Victim proof 404 `not_included`; control proof 200; reference verifier flags the victim (`reference_verifier_flags_victim: true`); audit `missing_receipts: 1`; `detected: true`. See the Broken section for the earlier run. |
+| Bot visibility, per-drop counters | Read after each of two custom attacks from `GET /admin/drops/{id}/live`. Saved to `reports/bot_visibility/live_counters_2026-10-04.json`. Run 2 added +36 rate-limited (429), +484 reused-token rejections, +175 already-issued, +2 tarpit hits. Totals after run 2: 107, 1,097, 403, 5. |
 
 ## Broken
 
-1. **Exp7 malicious server: the server's own audit does not see the dropped receipt.**
-   - Evidence: `reports/exp7_malicious_server/summary.md`, committed in `2676019`. Victim proof returns 404 `not_included`; the reference verifier fails (`reference_verifier_flags_victim: true`); but `integrity_missing_receipts: 0` and `detected: false`.
-   - The runbook (`docs/DEMO_RUNBOOK.md`, step 3:30) says Admin → Audit shows `missing_receipts > 0`. That is false for the last run.
-   - Where to look: `backend/internal/app/ledger.go` (~lines 288–318) counts `entry_registered` audit rows missing from the tree. The victim's audit row either is not written, or its `receipt_id` in the payload does not match the tree key. Not confirmed; needs a live run with Postgres to check the audit rows for the victim receipt.
-   - Demo impact: the malicious demo still proves misconduct to a client (404 plus verifier failure). Do not claim the server's own audit catches it.
-   - Fix not made: changing the `detected` definition to make it read true would hide the gap. Left as is.
+1. **Admin tile "Rate limited (all drops)" stays at 0 during a bot attack.** The tile reads `live:global`, which only receives rate limits on paths with no drop ID (`app.go` `live()`, `guard.go` `limited()`). Per-drop 429s (107 in run 2) never reach it. Fix: sum the per-drop `rate_limited` counters for the tile, or relabel it. Not changed in this pass.
 
-2. **Runbook numbers are stale.** `docs/DEMO_RUNBOOK.md` (0:00) says bots take about 20% of seats at about 5× advantage. The 10k run gives 19.8% and 9.9× modelled, 9.2× live. `DEMO_SCRIPT.md` uses the current numbers; the runbook has not been updated.
+2. **Exp7 server audit counter read 0 in the earlier run.** That run (committed earlier as `2676019`, now replaced) showed victim proof 404 and the verifier failing, but `missing_receipts: 0`, `detected: false`. Diagnosis: `ledger.go` (`integrity()`, about lines 288–318) counts `entry_registered` audit rows whose receipt is missing from the locked tree. In the earlier run the victim's receipt had **no** `entry_registered` row in `audit_log` at all, so there was nothing to count. In the rerun the row exists (`epoch 0`) and the count is 1. I could not find the cause of the missing row in the earlier run. It is intermittent, and I have two runs, so this is not settled.
+   - The proof is the evidence: it is client-side, needs only the receipt, and does not depend on the server's audit log.
+   - The runbook and script were changed to say this. Do not promise a red Audit panel.
+
+3. **Reruns collide on deterministic drop IDs.** `scripts/run_malicious_demo.sh` fails with `duplicate key value violates unique constraint "drops_pkey"` if the exp7 drop already exists in Postgres. `/test/clear` did not remove it, because it only walks the Redis `drops` set, which was empty after the restart. This pass cleared the exp7 drop with the same deletes the handler does (`entries`, `draw_results`, `counterfactuals`, `allocations`, `drop_secrets`, `drops`), leaving `audit_log` alone. Custom runs have no per-run tag, so repeated custom runs with the same tiers reuse one drop ID (`exp-custom_mix-fairdrop-4866bd`). Fix: a per-run tag or a clear that also empties Postgres.
+
+4. **Reports dir: custom runs overwrote tracked files.** Both custom runs wrote to `reports/custom_mix/`, which is tracked. Its tracked files are modified in the working tree and are **not committed**. I could not confirm whether those files held uncommitted results before my runs. Check and restore if needed.
 
 ## Unverified
 
-| Item | Why unverified | What would settle it |
+| Item | Why | What would settle it |
 |---|---|---|
-| Kill-replica live re-run (roadmap step 3) | Docker not running. The existing exp6 result is from an earlier run. | `scripts/start.sh`, then `scripts/kill_replica.sh 2` with Live monitor open, or `docker compose exec -T attack python -m attack_engine run exp6`. |
-| 50,000-entry lock and draw timing | The test skips without Redis; no run has passed here. | `scripts/test.sh` with the stack up, then check the logged lock and draw timings. |
-| Bot visibility live (roadmap step 5) | Only the code path was read. The live counters and the web traffic table were not seen on screen. | Run an exp2 or exp4 scenario with the Live Arena open; confirm 429s, rejected reused tokens and tarpit hits increment. |
-| Malicious demo from the UI (Test tools → Malicious demo) | Only the script path was read. | `scripts/run_malicious_demo.sh`, then open the victim's verify page. |
-| Exp4 and exp7 live FCFS rows match the modelled rows | Reports exist; not compared against a fresh run. | Compare `live_fcfs/summary.md` with the modelled table after a re-run. |
+| Live counters observed mid-attack | The counters were read after each run finished. Each attack took about 30 seconds, and the sampler I wrote to poll mid-run did not parse the drops list, so it captured nothing. | Poll `/admin/drops/{id}/live` every 3–5 s during a run, or do the same in the Live Arena. |
+| The Live Arena and Admin tiles in a browser | No browser was used in this pass. Only the endpoints the views read were checked. | Open `/admin` (Live Arena) and `/live` during a run and check the tiles against the saved numbers. |
+| Exp7 verify page shows the red banner | The verify page was not opened. The 404 and verifier results come from the API and the report. | Open the victim's `/verify` page after the malicious demo. |
+| Redis and API startup | Right after `start.sh`, the API logged `lookup redis: i/o timeout` (03:40:06). It listened at 03:40:35 and no further Redis errors appeared. | Check the startup log on a cold start. |
+| Kill-replica re-run | Not repeated this pass (the earlier exp6 result stands). | `scripts/kill_replica.sh 2` with the Live monitor open. |
 
 ## Not in git (left out on purpose)
 
-- Uncommitted regenerated results in `reports/exp2_proxy_flood/` (the 10k run output). Not committed in this pass because the roadmap did not list them.
-- `AUDIT_REPORT.md`, `testdata/`, `web/.env.local`, `web/.next/`, `web/node_modules/`, `web/next-env.d.ts`, `web/tsconfig.tsbuildinfo`: untracked. `web/.env.local` may contain local secrets; do not commit it.
-- `*.tokens.json` under `reports/` are git-ignored on purpose.
+- `reports/exp2_proxy_flood/` regenerated results (10k run output), not part of this pass.
+- `reports/custom_mix/` (see Broken item 4).
+- `AUDIT_REPORT.md`, `testdata/`, `web/.env.local` (may hold local secrets), `web/.next/`, `web/node_modules/`, `web/next-env.d.ts`, `web/tsconfig.tsbuildinfo`: untracked.
+- `*.tokens.json` under `reports/`: git-ignored on purpose.
 
-## Roadmap status
+## Roadmap status (this pass)
 
-| # | Item | Status |
-|---|---|---|
-| 1 | exp4 one human among bots | Done. Report committed in `3183854`. |
-| 2 | exp7 malicious-server toggle | Toggle exists and runs. Committed in `2676019`. Broken: server audit does not flag the drop (see above). |
-| 3 | Kill-replica test | Existing exp6 result is valid. No new live run (Docker down). |
-| 4 | 50,000-entry lock and draw timing | Committed earlier in `4655029`. Unverified: skips without Redis. |
-| 5 | Bot visibility check | Code path verified by reading. Not checked live. |
-| 6 | DEMO_SCRIPT.md and DEMO_READINESS.md | Written (this file and `DEMO_SCRIPT.md`). |
+| Step | Status |
+|---|---|
+| 1. `scripts/start.sh`, services up | Working (HTTP checks, no compose healthchecks). |
+| 2. Malicious demo: diagnose audit 0, keep proof as evidence, fix claims | Working as evidence (proof 404, verifier flags). Audit counter: diagnosed as an intermittent missing audit row, not settled. Runbook and script updated. Rerun committed. |
+| 3. 50,000-entry lock and draw timing | Working. Lock 1.094 s, draw 3.288 s. |
+| 4. Bot visibility, live | Partly working. Per-drop 429, reused-token and tarpit counters move (saved). Global tile reads 0 (broken). Mid-run and browser view unverified. |
+| 5. Readiness update, commits, push | Done with this file. Push to `demo-ready` only. |
