@@ -2,7 +2,7 @@
 
 Experiment 7 - malicious server: it silently drops one entry; that fan's verify page must turn red with proof.
 
-*policy under test:* **fairdrop** &nbsp; *duration:* 23.2s &nbsp; *drop:* `exp-exp7_malicious_server-fairdrop-4866bd`
+*policy under test:* **fairdrop** &nbsp; *duration:* 23.3s &nbsp; *drop:* `exp-exp7_malicious_server-fairdrop-4866bd`
 
 ## Traffic
 - verified identities participating: **300** (300 humans, 0 bot identities across 0 operators)
@@ -26,10 +26,10 @@ Experiment 7 - malicious server: it silently drops one entry; that fan's verify 
 
 | endpoint | requests | rps | p50 | p95 | p99 | 5xx/conn errors | error rate | rejected by design (4xx) |
 |---|---|---|---|---|---|---|---|---|
-| POST /test/login | 300 | 13 | 7 ms | 21 ms | 57 ms | 0 | 0.0000% | 0 |
-| GET /drops/{id} | 300 | 13 | 4 ms | 11 ms | 16 ms | 0 | 0.0000% | 0 |
-| POST /drops/{id}/test-token | 300 | 13 | 18 ms | 30 ms | 44 ms | 0 | 0.0000% | 0 |
-| POST /drops/{id}/register | 300 | 13 | 5 ms | 14 ms | 21 ms | 0 | 0.0000% | 0 |
+| POST /test/login | 300 | 13 | 11 ms | 79 ms | 104 ms | 0 | 0.0000% | 0 |
+| GET /drops/{id} | 300 | 13 | 4 ms | 32 ms | 69 ms | 0 | 0.0000% | 0 |
+| POST /drops/{id}/test-token | 300 | 13 | 26 ms | 66 ms | 105 ms | 0 | 0.0000% | 0 |
+| POST /drops/{id}/register | 300 | 13 | 6 ms | 17 ms | 30 ms | 0 | 0.0000% | 0 |
 
 ## Integrity (must be 0)
 
@@ -39,11 +39,11 @@ Experiment 7 - malicious server: it silently drops one entry; that fan's verify 
  "duplicate_entries": 0,
  "duplicate_seats": 0,
  "invalid_transitions": 0,
- "missing_receipts": 0,
+ "missing_receipts": 1,
  "oversold": 0
 }
 ```
-audit chain valid: **True** (2 events)  -> overall: **OK**
+audit chain valid: **True** (607 events)  -> overall: **VIOLATIONS**
 
 ## Independent verification (Python reference verifier)
 
@@ -61,7 +61,7 @@ audit chain valid: **True** (2 events)  -> overall: **OK**
 
 ```
 {
- "receipt_id": "6d189df43a7d83d2e6b663dee7e38a42e63c36e7cf5c5e416d344704d1427b72",
+ "receipt_id": "7e9dcaaac122358aeafd3e95e50fdf561f61b3fae1484517ba6b142f06e2f239",
  "uid": "t_035906"
 }
 ```
@@ -74,8 +74,8 @@ audit chain valid: **True** (2 events)  -> overall: **OK**
  "victim_sees": "not_included",
  "control_proof_status": 200,
  "reference_verifier_flags_victim": true,
- "integrity_missing_receipts": 0,
- "detected": false
+ "integrity_missing_receipts": 1,
+ "detected": true
 }
 ```
 

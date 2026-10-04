@@ -41,8 +41,8 @@
    "human_claim_rate": 0.9,
    "tag": ""
   },
-  "started": "2026-10-03T23:41:59",
-  "duration_s": 23.2,
+  "started": "2026-10-04T03:42:17",
+  "duration_s": 23.3,
   "drop_id": "exp-exp7_malicious_server-fairdrop-4866bd",
   "policy": "fairdrop",
   "population": 50000,
@@ -65,52 +65,52 @@
  "latency": {
   "POST /test/login": {
    "requests": 300,
-   "p50_ms": 6.74,
-   "p95_ms": 21.36,
-   "p99_ms": 56.62,
+   "p50_ms": 11.46,
+   "p95_ms": 79.14,
+   "p99_ms": 103.63,
    "errors": 0,
    "error_rate": 0.0,
    "rejected_by_design": 0,
-   "rps": 12.926485577216253,
+   "rps": 12.876728556581803,
    "status": {
     "200": 300
    }
   },
   "GET /drops/{id}": {
    "requests": 300,
-   "p50_ms": 3.67,
-   "p95_ms": 11.37,
-   "p99_ms": 16.26,
+   "p50_ms": 4.23,
+   "p95_ms": 32.08,
+   "p99_ms": 69.48,
    "errors": 0,
    "error_rate": 0.0,
    "rejected_by_design": 0,
-   "rps": 12.926485577216253,
+   "rps": 12.876728556581803,
    "status": {
     "200": 300
    }
   },
   "POST /drops/{id}/test-token": {
    "requests": 300,
-   "p50_ms": 17.67,
-   "p95_ms": 29.63,
-   "p99_ms": 43.79,
+   "p50_ms": 26.34,
+   "p95_ms": 65.65,
+   "p99_ms": 105.33,
    "errors": 0,
    "error_rate": 0.0,
    "rejected_by_design": 0,
-   "rps": 12.926485577216253,
+   "rps": 12.876728556581803,
    "status": {
     "200": 300
    }
   },
   "POST /drops/{id}/register": {
    "requests": 300,
-   "p50_ms": 5.06,
-   "p95_ms": 13.64,
-   "p99_ms": 20.99,
+   "p50_ms": 5.56,
+   "p95_ms": 16.54,
+   "p99_ms": 29.79,
    "errors": 0,
    "error_rate": 0.0,
    "rejected_by_design": 0,
-   "rps": 12.926485577216253,
+   "rps": 12.876728556581803,
    "status": {
     "200": 300
    }
@@ -122,7 +122,7 @@
  },
  "extras": {
   "malicious_target": {
-   "receipt_id": "6d189df43a7d83d2e6b663dee7e38a42e63c36e7cf5c5e416d344704d1427b72",
+   "receipt_id": "7e9dcaaac122358aeafd3e95e50fdf561f61b3fae1484517ba6b142f06e2f239",
    "uid": "t_035906"
   },
   "malicious": {
@@ -130,8 +130,8 @@
    "victim_sees": "not_included",
    "control_proof_status": 200,
    "reference_verifier_flags_victim": true,
-   "integrity_missing_receipts": 0,
-   "detected": false
+   "integrity_missing_receipts": 1,
+   "detected": true
   }
  },
  "verification": {
@@ -150,7 +150,7 @@
    {
     "name": "merkle root recomputed from entry list == published root",
     "ok": true,
-    "detail": "0a51fe241141f7199bf17ccbeb276139c0b03f06c26c7154e461564a6ec56396"
+    "detail": "d3ffb6a16d56dd356008af7975c96a61dd638ea8c4be86430c048ff83f9b97a5"
    },
    {
     "name": "root equals the root observed when the list was locked (before seed reveal)",
@@ -183,10 +183,10 @@
     "detail": "receipt missing from the Merkle tree -> evidence of server misconduct if you hold a signed receipt"
    }
   ],
-  "merkle_root": "0a51fe241141f7199bf17ccbeb276139c0b03f06c26c7154e461564a6ec56396",
+  "merkle_root": "d3ffb6a16d56dd356008af7975c96a61dd638ea8c4be86430c048ff83f9b97a5",
   "entry_count": 299,
   "beacon": true,
-  "seed_hash": "01872154939eeb316525f237bd19305e0a9d442a93ba801500548b5b645ba2c6"
+  "seed_hash": "a8b9e3b2218e8036166bf06dd8729ac140bd9ec8500bd96047a8d22f2169a18b"
  },
  "policies": {
   "fcfs": {
@@ -983,8 +983,8 @@
  "integrity": {
   "audit_chain": {
    "ok": true,
-   "length": 2,
-   "head_hash": "60d19d339bd77888319f6cea2da907aa55b6ed11df14dc4b3421ac2879ef40e7"
+   "length": 607,
+   "head_hash": "678057049a8de923bafb4b32aa4e4ea4c1cb06fcf8f571c420e44f5c8268ce74"
   },
   "drop_id": "exp-exp7_malicious_server-fairdrop-4866bd",
   "info": {
@@ -993,19 +993,21 @@
    "entries_registered": 300,
    "illegal_transitions_rejected": 0,
    "ledger_lag": 0,
-   "missing_receipt_examples": null,
+   "missing_receipt_examples": [
+    "7e9dcaaac122358aeafd3e95e50fdf561f61b3fae1484517ba6b142f06e2f239"
+   ],
    "rejected_reused_tokens": 0,
    "seats_owned_redis": 0,
    "tokens_issued": 300
   },
-  "ok": true,
-  "total_violations": 0,
+  "ok": false,
+  "total_violations": 1,
   "violations": {
    "broken_merkle": 0,
    "duplicate_entries": 0,
    "duplicate_seats": 0,
    "invalid_transitions": 0,
-   "missing_receipts": 0,
+   "missing_receipts": 1,
    "oversold": 0
   }
  },
@@ -1015,7 +1017,7 @@
   "actors": 300,
   "humans": 300,
   "bot_identities": 0,
-  "duration_s": 23.2,
+  "duration_s": 23.3,
   "client_requests": 1200,
   "bot_advantage_ratio": {
    "fcfs": null,
@@ -1035,19 +1037,19 @@
    "fairdrop": 0.0,
    "fcfs_live": null
   },
-  "integrity_ok": true,
+  "integrity_ok": false,
   "integrity_violations": {
    "broken_merkle": 0,
    "duplicate_entries": 0,
    "duplicate_seats": 0,
    "invalid_transitions": 0,
-   "missing_receipts": 0,
+   "missing_receipts": 1,
    "oversold": 0
   },
   "verified_by_reference_verifier": false,
   "p99_ms": {
-   "/drops/{id}/test-token": 43.79,
-   "/drops/{id}/register": 20.99
+   "/drops/{id}/test-token": 105.33,
+   "/drops/{id}/register": 29.79
   }
  }
 }

@@ -50,8 +50,9 @@ Companion to `docs/DEMO_RUNBOOK.md` (full detail). This is the order to talk thr
 ## 3:45 Malicious server
 
 - Admin → Test tools → Malicious demo, or `scripts/run_malicious_demo.sh`. The server silently drops one entry at lock.
-- Open that fan's verify page. The proof for the dropped receipt returns 404 `not_included`; the reference verifier fails on it.
-- **Known gap, say it honestly if asked:** the server's own integrity counter (`missing_receipts`) reported 0 in the last run, so Admin → Audit does not show the drop. See `DEMO_READINESS.md`. Do not promise a red Audit panel until it is fixed.
+- Request the dropped fan's proof: it returns 404 `not_included`. The control fan's proof returns 200.
+- The reference verifier (`verifier/verify.py`) rejects the published bundle for the dropped receipt. That is the evidence: anyone holding the receipt can check it without trusting the server.
+- Admin → Audit `missing_receipts` is a second check. It shows 1 in the 2026-10-04 rerun, but read 0 in an earlier run because that run's audit row was missing. Say so if asked. Do not promise a red Audit panel. See `DEMO_READINESS.md`.
 
 ## 4:15 Bots, visible live
 

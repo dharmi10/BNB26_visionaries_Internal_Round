@@ -22,6 +22,6 @@ Also `/story` has a 3D scroll explanation.
 
 **3:00 Kill a replica.** Run exp6 or `scripts/kill_replica.sh 2` while Live monitor is open: replica goes DOWN, traffic continues via failover, comes back, integrity panel stays all zero.
 
-**3:30 Malicious server.** Test tools → Malicious demo (or `scripts/run_malicious_demo.sh`): server drops one entry at lock. Open that fan's verify page: **red banner**, proof fails; Admin → Audit shows `missing_receipts > 0`.
+**3:30 Malicious server.** Test tools → Malicious demo (or `scripts/run_malicious_demo.sh`): server drops one entry at lock. The dropped fan's proof request returns **404 `not_included`** while the control fan's returns 200, and the reference verifier rejects the bundle. That client-side evidence is the proof. Admin → Audit `missing_receipts` is a second, server-side check: it reads 1 only when the dropped receipt has an `entry_registered` audit row, and it read 0 in one earlier run (see `DEMO_READINESS.md`). Do not promise a red Audit panel.
 
 Reset between runs: Test tools → *Reset selected drop* (keeps users) or `scripts/reset.sh` (wipes everything).

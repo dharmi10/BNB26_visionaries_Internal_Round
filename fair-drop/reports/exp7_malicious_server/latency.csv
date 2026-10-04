@@ -1,5 +1,5 @@
 endpoint,requests,rps,p50_ms,p95_ms,p99_ms,errors,error_rate,rejected_by_design
-POST /test/login,300,12.9,6.74,21.36,56.62,0,0.0,0
-GET /drops/{id},300,12.9,3.67,11.37,16.26,0,0.0,0
-POST /drops/{id}/test-token,300,12.9,17.67,29.63,43.79,0,0.0,0
-POST /drops/{id}/register,300,12.9,5.06,13.64,20.99,0,0.0,0
+POST /test/login,300,12.9,11.46,79.14,103.63,0,0.0,0
+GET /drops/{id},300,12.9,4.23,32.08,69.48,0,0.0,0
+POST /drops/{id}/test-token,300,12.9,26.34,65.65,105.33,0,0.0,0
+POST /drops/{id}/register,300,12.9,5.56,16.54,29.79,0,0.0,0
