@@ -1,0 +1,6 @@
+policy,operator,identities,seats,seats_per_identity,identity_spend_usd,cost_per_seat_usd,identities_per_seat
+fcfs,humans,300,300,1.0,900.0,3.0,1.0
+naive,humans,300,300,1.0,900.0,3.0,1.0
+fairdrop,humans,300,299,0.9966666666666667,900.0,3.0100334448160537,1.0033444816053512
+naive_expected,humans,300,300.0,1.0,900.0,3.0,1.0
+fairdrop_expected,humans,300,299.0,0.9966666666666667,900.0,3.0100334448160537,1.0033444816053512
