@@ -1,0 +1,11 @@
+{
+  "captured": "2026-10-04, read from GET /admin/drops/{id}/live after each run finished (not sampled mid-run; Live Arena not viewed in a browser)",
+  "drop_id": "exp-custom_mix-fairdrop-4866bd (both runs share this id; custom runs have no per-run tag)",
+  "run_1": {"spec": {"people": 300, "bots": {"FLOOD_BOT": 2, "RETRY_BOT": 3, "API_SCRAPER": 3, "PROXY_ROTATOR": 2}}, "entries": 307,
+            "counters_after": {"rate_limited": 71, "rejected_reused": 613, "rejected_already_issued": 228, "tarpit_hits": 3}},
+  "run_2": {"spec": {"people": 400, "bots": {"FLOOD_BOT": 4, "RETRY_BOT": 5, "API_SCRAPER": 5, "PROXY_ROTATOR": 3}}, "entries": 412,
+            "counters_after": {"rate_limited": 107, "rejected_reused": 1097, "rejected_already_issued": 403, "tarpit_hits": 5},
+            "delta_from_run_1": {"rate_limited": 36, "rejected_reused": 484, "rejected_already_issued": 175, "tarpit_hits": 2}},
+  "global_rate_limited_tile": 0,
+  "global_rate_limited_note": "the admin tile 'Rate limited (all drops)' reads live:global, which only gets rate limits on paths with no drop id; per-drop 429s never reach it"
+}
