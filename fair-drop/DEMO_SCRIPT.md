@@ -57,6 +57,7 @@ Companion to `docs/DEMO_RUNBOOK.md` (full detail). This is the order to talk thr
 ## 4:15 Bots, visible live
 
 - Live Arena → the bots card and the real web traffic table: filter by bot kind, or *Only refused / errors*.
+- The three counters are on a different tab: Admin → **More tools** → **Server details**. The tiles **Rate limited (all drops)**, **Rejected: reused token** and **Tarpit hits** start at 0 with each sale and climb during a bot attack. Confirmed in a custom attack (`reports/bot_visibility/server_details_mid_attack.png`). In the Live Arena's own run they moved late or not at all (see `DEMO_READINESS.md`), so set up a custom attack first if you want these on screen.
 - Point out, as they appear: rate-limited requests (429), rejected reused tokens, and tarpit hits (decoy endpoint, purple on the gate).
 - The gate: blue dot is a person, orange is a bot; green is in, red is turned away, purple is a decoy trap.
 
