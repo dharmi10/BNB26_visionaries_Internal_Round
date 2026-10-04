@@ -330,6 +330,7 @@ def run_scenario(scn: Scenario, out_root: str, extra_fcfs: bool = False) -> dict
     drop_id = f"exp-{scn.name}-{scn.policy}-{tag}"[:60]
     log(f"=== {scn.name} {scn.tag} policy={scn.policy} drop={drop_id}")
     boundary = scn.policy != "fcfs" and any(o.profile == "STATE_SNIPER" for o in scn.operators)   # the runner opens/closes the sale at announced instants
+    api.req("POST", "/test/clear", json={"drop_id": drop_id})   # a rerun starts from an empty sale with this id (Redis keys and Postgres rows)
     ensure_drop(api, scn, drop_id, scheduled=boundary)
     plan = build_plan(scn, config.POPULATION, drop_id)
     labels = labels_from_plan(plan)

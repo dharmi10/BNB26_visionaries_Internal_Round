@@ -350,24 +350,52 @@ func (a *App) hTestReset(w http.ResponseWriter, r *http.Request) {
 // hTestClear is the "Restart" button: forget every test sale (ids starting "exp-") and its results, reset the protection
 // settings and the rate-limit counters. Real sales, users and the append-only audit log are not touched.
 func (a *App) hTestClear(w http.ResponseWriter, r *http.Request) {
+	// body is optional: empty clears every test sale; {"drop_id": "exp-..."} clears only that sale
+	var in struct {
+		DropID string `json:"drop_id"`
+	}
+	_ = decode(r, &in)
+	if in.DropID != "" && !strings.HasPrefix(in.DropID, "exp-") {
+		fail(w, 400, "bad_request")
+		return
+	}
 	ctx := r.Context()
 	a.waitLedger(ctx, 10*time.Second) // let queued writes land first, so nothing re-appears afterwards
+	// Redis can be empty (restart) while Postgres still holds the rows, so collect ids from both
+	seen := map[string]bool{}
 	ids, _ := a.rdb.SMembers(ctx, "drops").Result()
-	gone := 0
 	for _, id := range ids {
-		if !strings.HasPrefix(id, "exp-") {
+		seen[id] = true
+	}
+	if rows, err := a.pg.Query(ctx, "SELECT id FROM drops WHERE id LIKE 'exp-%'"); err == nil {
+		for rows.Next() {
+			var id string
+			if rows.Scan(&id) == nil {
+				seen[id] = true
+			}
+		}
+		rows.Close()
+	}
+	gone := 0
+	for id := range seen {
+		if in.DropID != "" && id != in.DropID {
 			continue
 		}
 		a.rdb.SRem(ctx, "drops", id)
-		for _, q := range []string{"DELETE FROM entries WHERE drop_id=$1", "DELETE FROM draw_results WHERE drop_id=$1", "DELETE FROM counterfactuals WHERE drop_id=$1", "DELETE FROM allocations WHERE drop_id=$1"} {
+		for _, q := range []string{"DELETE FROM entries WHERE drop_id=$1", "DELETE FROM draw_results WHERE drop_id=$1", "DELETE FROM counterfactuals WHERE drop_id=$1", "DELETE FROM allocations WHERE drop_id=$1", "DELETE FROM drop_secrets WHERE drop_id=$1"} {
 			a.pg.Exec(ctx, q, id)
 		}
-		a.pg.Exec(ctx, "DELETE FROM drop_secrets WHERE drop_id=$1", id)
 		a.pg.Exec(ctx, "DELETE FROM drops WHERE id=$1", id) // test sales have fixed names, so the row must go or they cannot be created again
+		a.scanDel(ctx, "drop:"+id+":*")
+		a.scanDel(ctx, "idem:"+id+":*")
+		a.scanDel(ctx, "base:"+id+":*")
+		a.rdb.Del(ctx, "live:"+id, "integ:"+id, "test:malicious:"+id)
 		gone++
 	}
-	for _, pat := range []string{"drop:exp-*", "idem:exp-*", "base:exp-*", "live:exp-*", "integ:exp-*", "rl:*", "adminfail:*"} {
-		a.scanDel(ctx, pat)
+	if in.DropID == "" {
+		for _, pat := range []string{"drop:exp-*", "idem:exp-*", "base:exp-*", "live:exp-*", "integ:exp-*", "test:malicious:exp-*", "rl:*", "adminfail:*"} {
+			a.scanDel(ctx, pat)
+		}
 	}
 	var cursor uint64
 	for { // forget test tickets in users' sets
@@ -375,7 +403,7 @@ func (a *App) hTestClear(w http.ResponseWriter, r *http.Request) {
 		for _, k := range keys {
 			ms, _ := a.rdb.SMembers(ctx, k).Result()
 			for _, m := range ms {
-				if strings.HasPrefix(m, "exp-") {
+				if (in.DropID != "" && strings.HasPrefix(m, in.DropID+"|")) || (in.DropID == "" && strings.HasPrefix(m, "exp-")) {
 					a.rdb.SRem(ctx, k, m)
 				}
 			}
@@ -385,13 +413,22 @@ func (a *App) hTestClear(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 	}
-	a.rdb.Del(ctx, "live:global", "config:guard")
-	a.guardAt.Store(0)
-	a.pg.Exec(ctx, "DELETE FROM experiments")
-	for _, m := range []*sync.Map{&a.rts, &a.trees} {
-		m.Range(func(k, _ any) bool {
-			if strings.HasPrefix(k.(string), "exp-") {
-				m.Delete(k)
+	if in.DropID == "" {
+		a.rdb.Del(ctx, "live:global", "config:guard")
+		a.guardAt.Store(0)
+		a.pg.Exec(ctx, "DELETE FROM experiments")
+		for _, m := range []*sync.Map{&a.rts, &a.trees} {
+			m.Range(func(k, _ any) bool {
+				if strings.HasPrefix(k.(string), "exp-") {
+					m.Delete(k)
+				}
+				return true
+			})
+		}
+	} else {
+		a.trees.Range(func(k, _ any) bool {
+			if strings.HasPrefix(k.(string), in.DropID+":") {
+				a.trees.Delete(k)
 			}
 			return true
 		})

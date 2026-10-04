@@ -37,7 +37,7 @@ export default function LiveTab({ dropId }: { dropId: string }) {
         <Stat label="Tokens issued" value={s.tokens_issued.toLocaleString()} sub="one per verified identity" />
         <Stat label="Entries registered" value={s.entries_registered.toLocaleString()} />
         <Stat label="Requests / sec" value={Math.round(s.rps ?? 0).toLocaleString()} sub="all replicas" />
-        <Stat label="Rate limited (all drops)" value={(s.rate_limited_global || 0).toLocaleString()} sub="availability only" tone={s.rate_limited_global ? "warn" : undefined} />
+        <Stat label="Rate limited (all drops)" value={((s.rate_limited_global || 0) + (c.rate_limited || 0)).toLocaleString()} sub="availability only" tone={(s.rate_limited_global || c.rate_limited) ? "warn" : undefined} />
         <Stat label="p99 latency" value={`${s.p99_ms.toFixed(0)} ms`} sub="worst replica" />
         <Stat label="Replicas healthy" value={`${healthy} / ${s.replicas.length}`} tone={healthy < s.replicas.length ? "bad" : "ok"} />
         <Stat label="Rejected: reused token" value={(c.rejected_reused || 0).toLocaleString()} />
