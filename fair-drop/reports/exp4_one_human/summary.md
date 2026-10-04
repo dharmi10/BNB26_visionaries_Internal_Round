@@ -2,11 +2,11 @@
 
 Experiment 4 - the 1-human scenario: ~50,000 bot requests from 5 operators with 4 identities each, plus ONE human, 10 seats.
 
-*policy under test:* **fairdrop** &nbsp; *duration:* 32.1s &nbsp; *drop:* `exp-exp4_one_human-fairdrop-6b9d69`
+*policy under test:* **fairdrop** &nbsp; *duration:* 63.0s &nbsp; *drop:* `exp-exp4_one_human-fairdrop-6b9d69`
 
 ## Traffic
 - verified identities participating: **21** (1 humans, 20 bot identities across 5 operators)
-- client requests sent: **52,077**; recorded entry attempts (server): **29875**
+- client requests sent: **52,034**; recorded entry attempts (server): **39481**
 - assumed identity cost: **$3.0** (explicit, configurable; this shows the *cost* of buying more identities, it does not claim bots are impossible)
 
   - operator `flood-a`: FLOOD_BOT, IP pool 5
@@ -31,24 +31,24 @@ Experiment 4 - the 1-human scenario: ~50,000 bot requests from 5 operators with 
 
 | operator | identities | FCFS seats | naive seats (E) | Fair Drop seats (E) | Fair Drop cost/seat |
 |---|---|---|---|---|---|
-| proxy-a | 4 | 6 | 3.4 | 1.9 | 6.49 |
-| flood-b | 4 | 4 | 0.5 | 1.8 | 6.84 |
-| flood-a | 4 | 0 | 0.4 | 2.0 | 6.05 |
-| proxy-b | 4 | 0 | 3.3 | 1.9 | 6.22 |
-| retry-a | 4 | 0 | 2.5 | 2.0 | 5.96 |
+| proxy-a | 4 | 7 | 2.4 | 1.9 | 6.49 |
+| flood-b | 4 | 2 | 1.6 | 1.8 | 6.84 |
+| flood-a | 4 | 1 | 1.5 | 2.0 | 6.05 |
+| proxy-b | 4 | 0 | 2.5 | 1.9 | 6.22 |
+| retry-a | 4 | 0 | 2.0 | 2.0 | 5.96 |
 
 ## Live FCFS run (same actors replayed against the classic sale)
 
-operators' seats: proxy-a=6, flood-b=4, flood-a=0, humans=0, proxy-b=0, retry-a=0
+operators' seats: proxy-a=7, flood-a=2, flood-b=1, humans=0, proxy-b=0, retry-a=0
 
 ## Latency (client observed)
 
 | endpoint | requests | rps | p50 | p95 | p99 | 5xx/conn errors | error rate | rejected by design (4xx) |
 |---|---|---|---|---|---|---|---|---|
-| POST /drops/{id}/register | 39513 | 1232 | 2 ms | 4 ms | 5 ms | 0 | 0.0000% | 31992 |
-| POST /drops/{id}/test-token | 8582 | 268 | 2 ms | 3 ms | 4 ms | 0 | 0.0000% | 8561 |
-| GET /drops/{id} | 3961 | 123 | 2 ms | 4 ms | 4 ms | 0 | 0.0000% | 0 |
-| POST /test/login | 21 | 1 | 3 ms | 6 ms | 7 ms | 0 | 0.0000% | 0 |
+| POST /drops/{id}/register | 39481 | 626 | 20 ms | 48 ms | 71 ms | 0 | 0.0000% | 31960 |
+| POST /drops/{id}/test-token | 8575 | 136 | 19 ms | 43 ms | 68 ms | 0 | 0.0000% | 8554 |
+| GET /drops/{id} | 3957 | 63 | 19 ms | 37 ms | 54 ms | 0 | 0.0000% | 0 |
+| POST /test/login | 21 | 0 | 24 ms | 60 ms | 92 ms | 0 | 0.0000% | 0 |
 
 ## Integrity (must be 0)
 
@@ -62,7 +62,7 @@ operators' seats: proxy-a=6, flood-b=4, flood-a=0, humans=0, proxy-b=0, retry-a=
  "oversold": 0
 }
 ```
-audit chain valid: **True** (528392 events)  -> overall: **OK**
+audit chain valid: **True** (2 events)  -> overall: **OK**
 
 ## Independent verification (Python reference verifier)
 

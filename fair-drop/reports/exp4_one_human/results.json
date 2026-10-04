@@ -80,8 +80,8 @@
    "human_claim_rate": 0.9,
    "tag": ""
   },
-  "started": "2026-10-03T16:56:06",
-  "duration_s": 32.1,
+  "started": "2026-10-03T23:39:47",
+  "duration_s": 63.0,
   "drop_id": "exp-exp4_one_human-fairdrop-6b9d69",
   "policy": "fairdrop",
   "population": 50000,
@@ -114,79 +114,77 @@
     "ip_pool": 100
    }
   },
-  "client_requests": 52077,
-  "client_events": {
-   "retry_429": 43
-  },
+  "client_requests": 52034,
+  "client_events": {},
   "receipts_issued_to_clients": 21,
-  "attempts_recorded": 29875,
+  "attempts_recorded": 39481,
   "attempts_by_kind": {
-   "bot": 29874,
+   "bot": 39480,
    "human": 1
   }
  },
  "latency": {
   "POST /test/login": {
    "requests": 21,
-   "p50_ms": 3.35,
-   "p95_ms": 5.59,
-   "p99_ms": 6.59,
+   "p50_ms": 24.32,
+   "p95_ms": 59.62,
+   "p99_ms": 91.72,
    "errors": 0,
    "error_rate": 0.0,
    "rejected_by_design": 0,
-   "rps": 0.6546898343501459,
+   "rps": 0.33310382373196695,
    "status": {
     "200": 21
    }
   },
   "POST /drops/{id}/test-token": {
-   "requests": 8582,
-   "p50_ms": 1.68,
-   "p95_ms": 3.41,
-   "p99_ms": 4.35,
+   "requests": 8575,
+   "p50_ms": 18.97,
+   "p95_ms": 43.12,
+   "p99_ms": 67.88,
    "errors": 0,
    "error_rate": 0.0,
-   "rejected_by_design": 8561,
-   "rps": 267.5499123044263,
+   "rejected_by_design": 8554,
+   "rps": 136.01739469055317,
    "status": {
     "200": 21,
-    "409": 8561
+    "409": 8554
    }
   },
   "POST /drops/{id}/register": {
-   "requests": 39513,
-   "p50_ms": 1.93,
-   "p95_ms": 3.59,
-   "p99_ms": 4.53,
+   "requests": 39481,
+   "p50_ms": 20.14,
+   "p95_ms": 47.54,
+   "p99_ms": 71.4,
    "errors": 0,
    "error_rate": 0.0,
-   "rejected_by_design": 31992,
-   "rps": 1231.845686889396,
+   "rejected_by_design": 31960,
+   "rps": 626.2510507029423,
    "status": {
     "200": 7521,
-    "409": 22354,
-    "429": 9638
+    "409": 29869,
+    "429": 2091
    }
   },
   "GET /drops/{id}": {
-   "requests": 3961,
-   "p50_ms": 1.84,
-   "p95_ms": 3.52,
-   "p99_ms": 4.27,
+   "requests": 3957,
+   "p50_ms": 18.99,
+   "p95_ms": 37.43,
+   "p99_ms": 53.95,
    "errors": 0,
    "error_rate": 0.0,
    "rejected_by_design": 0,
-   "rps": 123.48697304099657,
+   "rps": 62.7662776432092,
    "status": {
-    "200": 3961
+    "200": 3957
    }
   }
  },
  "counters": {
   "entries": 21,
-  "rate_limited": 9638,
-  "rejected_already_issued": 8561,
-  "rejected_reused": 22354,
+  "rate_limited": 2091,
+  "rejected_already_issued": 8554,
+  "rejected_reused": 31960,
   "replays": 7500,
   "tokens_issued": 21
  },
@@ -215,7 +213,7 @@
    {
     "name": "merkle root recomputed from entry list == published root",
     "ok": true,
-    "detail": "395c25b3eac9abdc18bf08bde303c6fa2a15bba55dc929ee76a27a5c2a64443d"
+    "detail": "7efab510aaf9e6915c8dfba7b28225bf322cc7ef457c52df4f2799004e69b4a8"
    },
    {
     "name": "root equals the root observed when the list was locked (before seed reveal)",
@@ -233,10 +231,10 @@
     "detail": "21 entries, 10 seats"
    }
   ],
-  "merkle_root": "395c25b3eac9abdc18bf08bde303c6fa2a15bba55dc929ee76a27a5c2a64443d",
+  "merkle_root": "7efab510aaf9e6915c8dfba7b28225bf322cc7ef457c52df4f2799004e69b4a8",
   "entry_count": 21,
   "beacon": true,
-  "seed_hash": "c07b74b58fa4393ed57db5718976b992083feac354fa56373ca8c62ee2600c48"
+  "seed_hash": "f171d062bda8516944099a72bdd6d91a6630a1f65001918b52ffcaf4351fede2"
  },
  "policies": {
   "fcfs": {
@@ -245,15 +243,16 @@
     "bot": 10
    },
    "seats_by_operator": {
-    "proxy-a": 6,
-    "flood-b": 4
+    "proxy-a": 7,
+    "flood-b": 2,
+    "flood-a": 1
    },
    "identities_by_kind": {
     "bot": 20,
     "human": 1
    },
    "requests_by_kind": {
-    "bot": 29874,
+    "bot": 39480,
     "human": 1
    },
    "bot_seat_share": 1.0,
@@ -265,19 +264,19 @@
    "operators": {
     "flood-a": {
      "identities": 4,
-     "seats": 0,
-     "seats_per_identity": 0.0,
+     "seats": 1,
+     "seats_per_identity": 0.25,
      "identity_spend_usd": 12.0,
-     "cost_per_seat_usd": null,
-     "identities_per_seat": null
+     "cost_per_seat_usd": 12.0,
+     "identities_per_seat": 4.0
     },
     "flood-b": {
      "identities": 4,
-     "seats": 4,
-     "seats_per_identity": 1.0,
+     "seats": 2,
+     "seats_per_identity": 0.5,
      "identity_spend_usd": 12.0,
-     "cost_per_seat_usd": 3.0,
-     "identities_per_seat": 1.0
+     "cost_per_seat_usd": 6.0,
+     "identities_per_seat": 2.0
     },
     "humans": {
      "identities": 1,
@@ -289,11 +288,11 @@
     },
     "proxy-a": {
      "identities": 4,
-     "seats": 6,
-     "seats_per_identity": 1.5,
+     "seats": 7,
+     "seats_per_identity": 1.75,
      "identity_spend_usd": 12.0,
-     "cost_per_seat_usd": 2.0,
-     "identities_per_seat": 0.6666666666666666
+     "cost_per_seat_usd": 1.7142857142857142,
+     "identities_per_seat": 0.5714285714285714
     },
     "proxy-b": {
      "identities": 4,
@@ -320,17 +319,17 @@
     "bot": 10
    },
    "seats_by_operator": {
-    "proxy-a": 4,
-    "retry-a": 3,
-    "proxy-b": 2,
-    "flood-b": 1
+    "proxy-a": 2,
+    "retry-a": 2,
+    "proxy-b": 3,
+    "flood-b": 3
    },
    "identities_by_kind": {
     "bot": 20,
     "human": 1
    },
    "requests_by_kind": {
-    "bot": 29874,
+    "bot": 39480,
     "human": 1
    },
    "bot_seat_share": 1.0,
@@ -350,11 +349,11 @@
     },
     "flood-b": {
      "identities": 4,
-     "seats": 1,
-     "seats_per_identity": 0.25,
+     "seats": 3,
+     "seats_per_identity": 0.75,
      "identity_spend_usd": 12.0,
-     "cost_per_seat_usd": 12.0,
-     "identities_per_seat": 4.0
+     "cost_per_seat_usd": 4.0,
+     "identities_per_seat": 1.3333333333333333
     },
     "humans": {
      "identities": 1,
@@ -366,30 +365,30 @@
     },
     "proxy-a": {
      "identities": 4,
-     "seats": 4,
-     "seats_per_identity": 1.0,
-     "identity_spend_usd": 12.0,
-     "cost_per_seat_usd": 3.0,
-     "identities_per_seat": 1.0
-    },
-    "proxy-b": {
-     "identities": 4,
      "seats": 2,
      "seats_per_identity": 0.5,
      "identity_spend_usd": 12.0,
      "cost_per_seat_usd": 6.0,
      "identities_per_seat": 2.0
     },
-    "retry-a": {
+    "proxy-b": {
      "identities": 4,
      "seats": 3,
      "seats_per_identity": 0.75,
      "identity_spend_usd": 12.0,
      "cost_per_seat_usd": 4.0,
      "identities_per_seat": 1.3333333333333333
+    },
+    "retry-a": {
+     "identities": 4,
+     "seats": 2,
+     "seats_per_identity": 0.5,
+     "identity_spend_usd": 12.0,
+     "cost_per_seat_usd": 6.0,
+     "identities_per_seat": 2.0
     }
    },
-   "max_seats_one_actor": 2
+   "max_seats_one_actor": 1
   },
   "fairdrop": {
    "seats_total": 10,
@@ -398,19 +397,18 @@
     "human": 1
    },
    "seats_by_operator": {
-    "proxy-a": 3,
     "flood-b": 2,
-    "proxy-b": 1,
-    "flood-a": 2,
+    "flood-a": 3,
     "humans": 1,
-    "retry-a": 1
+    "proxy-a": 2,
+    "proxy-b": 2
    },
    "identities_by_kind": {
     "bot": 20,
     "human": 1
    },
    "requests_by_kind": {
-    "bot": 29874,
+    "bot": 39480,
     "human": 1
    },
    "bot_seat_share": 0.9,
@@ -422,11 +420,11 @@
    "operators": {
     "flood-a": {
      "identities": 4,
-     "seats": 2,
-     "seats_per_identity": 0.5,
+     "seats": 3,
+     "seats_per_identity": 0.75,
      "identity_spend_usd": 12.0,
-     "cost_per_seat_usd": 6.0,
-     "identities_per_seat": 2.0
+     "cost_per_seat_usd": 4.0,
+     "identities_per_seat": 1.3333333333333333
     },
     "flood-b": {
      "identities": 4,
@@ -446,49 +444,49 @@
     },
     "proxy-a": {
      "identities": 4,
-     "seats": 3,
-     "seats_per_identity": 0.75,
+     "seats": 2,
+     "seats_per_identity": 0.5,
      "identity_spend_usd": 12.0,
-     "cost_per_seat_usd": 4.0,
-     "identities_per_seat": 1.3333333333333333
+     "cost_per_seat_usd": 6.0,
+     "identities_per_seat": 2.0
     },
     "proxy-b": {
      "identities": 4,
-     "seats": 1,
-     "seats_per_identity": 0.25,
+     "seats": 2,
+     "seats_per_identity": 0.5,
      "identity_spend_usd": 12.0,
-     "cost_per_seat_usd": 12.0,
-     "identities_per_seat": 4.0
+     "cost_per_seat_usd": 6.0,
+     "identities_per_seat": 2.0
     },
     "retry-a": {
      "identities": 4,
-     "seats": 1,
-     "seats_per_identity": 0.25,
+     "seats": 0,
+     "seats_per_identity": 0.0,
      "identity_spend_usd": 12.0,
-     "cost_per_seat_usd": 12.0,
-     "identities_per_seat": 4.0
+     "cost_per_seat_usd": null,
+     "identities_per_seat": null
     }
    },
    "max_seats_one_actor": 1
   },
   "naive_expected": {
-   "seats_total": 10.0,
+   "seats_total": 9.999999999999998,
    "seats_by_kind": {
-    "bot": 10.0
+    "bot": 9.999999999999998
    },
    "seats_by_operator": {
-    "proxy-a": 3.39,
-    "proxy-b": 3.295,
-    "retry-a": 2.48,
-    "flood-a": 0.38,
-    "flood-b": 0.45499999999999996
+    "proxy-a": 2.44,
+    "flood-a": 1.47,
+    "retry-a": 1.9700000000000002,
+    "proxy-b": 2.5149999999999997,
+    "flood-b": 1.605
    },
    "identities_by_kind": {
     "bot": 20,
     "human": 1
    },
    "requests_by_kind": {
-    "bot": 29874,
+    "bot": 39480,
     "human": 1
    },
    "bot_seat_share": 1.0,
@@ -500,19 +498,19 @@
    "operators": {
     "flood-a": {
      "identities": 4,
-     "seats": 0.38,
-     "seats_per_identity": 0.095,
+     "seats": 1.47,
+     "seats_per_identity": 0.3675,
      "identity_spend_usd": 12.0,
-     "cost_per_seat_usd": 31.57894736842105,
-     "identities_per_seat": 10.526315789473685
+     "cost_per_seat_usd": 8.16326530612245,
+     "identities_per_seat": 2.7210884353741496
     },
     "flood-b": {
      "identities": 4,
-     "seats": 0.45499999999999996,
-     "seats_per_identity": 0.11374999999999999,
+     "seats": 1.605,
+     "seats_per_identity": 0.40125,
      "identity_spend_usd": 12.0,
-     "cost_per_seat_usd": 26.373626373626376,
-     "identities_per_seat": 8.791208791208792
+     "cost_per_seat_usd": 7.4766355140186915,
+     "identities_per_seat": 2.4922118380062304
     },
     "humans": {
      "identities": 1,
@@ -524,52 +522,52 @@
     },
     "proxy-a": {
      "identities": 4,
-     "seats": 3.39,
-     "seats_per_identity": 0.8475,
+     "seats": 2.44,
+     "seats_per_identity": 0.61,
      "identity_spend_usd": 12.0,
-     "cost_per_seat_usd": 3.5398230088495573,
-     "identities_per_seat": 1.1799410029498525
+     "cost_per_seat_usd": 4.918032786885246,
+     "identities_per_seat": 1.639344262295082
     },
     "proxy-b": {
      "identities": 4,
-     "seats": 3.295,
-     "seats_per_identity": 0.82375,
+     "seats": 2.5149999999999997,
+     "seats_per_identity": 0.6287499999999999,
      "identity_spend_usd": 12.0,
-     "cost_per_seat_usd": 3.6418816388467374,
-     "identities_per_seat": 1.2139605462822458
+     "cost_per_seat_usd": 4.771371769383698,
+     "identities_per_seat": 1.5904572564612327
     },
     "retry-a": {
      "identities": 4,
-     "seats": 2.48,
-     "seats_per_identity": 0.62,
+     "seats": 1.9700000000000002,
+     "seats_per_identity": 0.49250000000000005,
      "identity_spend_usd": 12.0,
-     "cost_per_seat_usd": 4.838709677419355,
-     "identities_per_seat": 1.6129032258064517
+     "cost_per_seat_usd": 6.091370558375634,
+     "identities_per_seat": 2.030456852791878
     }
    },
-   "max_seats_one_actor": 0.9,
+   "max_seats_one_actor": 0.71,
    "monte_carlo_draws": 200,
    "win_probability": {
-    "t_030016": 0.9,
-    "t_013847": 0.82,
-    "t_004197": 0.7,
-    "t_009155": 0.7,
-    "t_025049": 0.885,
-    "t_018226": 0.84,
-    "t_035130": 0.85,
-    "t_003895": 0.84,
-    "t_027345": 0.535,
-    "t_039414": 0.795,
-    "t_019018": 0.08,
-    "t_018518": 0.545,
-    "t_045490": 0.755,
-    "t_011079": 0.125,
-    "t_008606": 0.135,
-    "t_002247": 0.115,
-    "t_015306": 0.065,
-    "t_049141": 0.1,
-    "t_016863": 0.105,
-    "t_015233": 0.11
+    "t_035130": 0.545,
+    "t_011079": 0.4,
+    "t_018518": 0.51,
+    "t_019018": 0.38,
+    "t_039414": 0.655,
+    "t_015233": 0.335,
+    "t_015306": 0.355,
+    "t_013847": 0.69,
+    "t_018226": 0.595,
+    "t_009155": 0.475,
+    "t_027345": 0.595,
+    "t_030016": 0.63,
+    "t_049141": 0.43,
+    "t_003895": 0.575,
+    "t_045490": 0.71,
+    "t_016863": 0.42,
+    "t_008606": 0.385,
+    "t_004197": 0.39,
+    "t_002247": 0.37,
+    "t_025049": 0.555
    }
   },
   "fairdrop_expected": {
@@ -591,7 +589,7 @@
     "human": 1
    },
    "requests_by_kind": {
-    "bot": 29874,
+    "bot": 39480,
     "human": 1
    },
    "bot_seat_share": 0.9535,
@@ -682,8 +680,9 @@
     "bot": 10
    },
    "seats_by_operator": {
-    "proxy-a": 6,
-    "flood-b": 4
+    "proxy-a": 7,
+    "flood-a": 2,
+    "flood-b": 1
    },
    "identities_by_kind": {
     "bot": 20,
@@ -702,19 +701,19 @@
    "operators": {
     "flood-a": {
      "identities": 4,
-     "seats": 0,
-     "seats_per_identity": 0.0,
+     "seats": 2,
+     "seats_per_identity": 0.5,
      "identity_spend_usd": 12.0,
-     "cost_per_seat_usd": null,
-     "identities_per_seat": null
+     "cost_per_seat_usd": 6.0,
+     "identities_per_seat": 2.0
     },
     "flood-b": {
      "identities": 4,
-     "seats": 4,
-     "seats_per_identity": 1.0,
+     "seats": 1,
+     "seats_per_identity": 0.25,
      "identity_spend_usd": 12.0,
-     "cost_per_seat_usd": 3.0,
-     "identities_per_seat": 1.0
+     "cost_per_seat_usd": 12.0,
+     "identities_per_seat": 4.0
     },
     "humans": {
      "identities": 1,
@@ -726,11 +725,11 @@
     },
     "proxy-a": {
      "identities": 4,
-     "seats": 6,
-     "seats_per_identity": 1.5,
+     "seats": 7,
+     "seats_per_identity": 1.75,
      "identity_spend_usd": 12.0,
-     "cost_per_seat_usd": 2.0,
-     "identities_per_seat": 0.6666666666666666
+     "cost_per_seat_usd": 1.7142857142857142,
+     "identities_per_seat": 0.5714285714285714
     },
     "proxy-b": {
      "identities": 4,
@@ -768,8 +767,8 @@
  "integrity": {
   "audit_chain": {
    "ok": true,
-   "length": 528392,
-   "head_hash": "c761ae67c14553d7c2f90c55c6b89083ca04fd46ea299a1c1d118b7b852e539d"
+   "length": 2,
+   "head_hash": "60d19d339bd77888319f6cea2da907aa55b6ed11df14dc4b3421ac2879ef40e7"
   },
   "drop_id": "exp-exp4_one_human-fairdrop-6b9d69",
   "info": {
@@ -779,7 +778,7 @@
    "illegal_transitions_rejected": 0,
    "ledger_lag": 0,
    "missing_receipt_examples": null,
-   "rejected_reused_tokens": 22354,
+   "rejected_reused_tokens": 31960,
    "seats_owned_redis": 0,
    "tokens_issued": 21
   },
@@ -800,8 +799,8 @@
   "actors": 21,
   "humans": 1,
   "bot_identities": 20,
-  "duration_s": 32.1,
-  "client_requests": 52077,
+  "duration_s": 63.0,
+  "client_requests": 52034,
   "bot_advantage_ratio": {
    "fcfs": 1.05,
    "naive": 1.05,
@@ -831,33 +830,33 @@
   },
   "verified_by_reference_verifier": true,
   "p99_ms": {
-   "/drops/{id}/test-token": 4.35,
-   "/drops/{id}/register": 4.53
+   "/drops/{id}/test-token": 67.88,
+   "/drops/{id}/register": 71.4
   }
  },
  "live_fcfs_latency": {
   "POST /test/login": {
    "requests": 21,
-   "p50_ms": 2.07,
-   "p95_ms": 3.45,
-   "p99_ms": 3.7,
+   "p50_ms": 6.72,
+   "p95_ms": 18.1,
+   "p99_ms": 34.47,
    "errors": 0,
    "error_rate": 0.0,
    "rejected_by_design": 0,
-   "rps": 0.652831608438882,
+   "rps": 0.6507210656861487,
    "status": {
     "200": 21
    }
   },
   "POST /baseline/{id}/buy": {
    "requests": 31,
-   "p50_ms": 1.18,
-   "p95_ms": 1.68,
-   "p99_ms": 2.08,
+   "p50_ms": 5.65,
+   "p95_ms": 8.78,
+   "p99_ms": 9.62,
    "errors": 0,
    "error_rate": 0.0,
    "rejected_by_design": 21,
-   "rps": 0.9637038029335877,
+   "rps": 0.96058823982241,
    "status": {
     "200": 10,
     "409": 21
@@ -865,13 +864,13 @@
   },
   "GET /drops/{id}": {
    "requests": 1,
-   "p50_ms": 1.4,
-   "p95_ms": 1.4,
-   "p99_ms": 1.4,
+   "p50_ms": 5.85,
+   "p95_ms": 5.85,
+   "p99_ms": 5.85,
    "errors": 0,
    "error_rate": 0.0,
    "rejected_by_design": 0,
-   "rps": 0.03108721944947057,
+   "rps": 0.03098671741362613,
    "status": {
     "200": 1
    }

@@ -2,7 +2,7 @@
 
 Experiment 4 - the 1-human scenario: ~50,000 bot requests from 5 operators with 4 identities each, plus ONE human, 10 seats.
 
-*policy under test:* **fcfs** &nbsp; *duration:* 32.2s &nbsp; *drop:* `exp-exp4_one_human-fcfs-6b9d69`
+*policy under test:* **fcfs** &nbsp; *duration:* 32.3s &nbsp; *drop:* `exp-exp4_one_human-fcfs-6b9d69`
 
 ## Traffic
 - verified identities participating: **21** (1 humans, 20 bot identities across 5 operators)
@@ -28,9 +28,9 @@ Experiment 4 - the 1-human scenario: ~50,000 bot requests from 5 operators with 
 
 | endpoint | requests | rps | p50 | p95 | p99 | 5xx/conn errors | error rate | rejected by design (4xx) |
 |---|---|---|---|---|---|---|---|---|
-| POST /baseline/{id}/buy | 31 | 1 | 1 ms | 2 ms | 2 ms | 0 | 0.0000% | 21 |
-| POST /test/login | 21 | 1 | 2 ms | 3 ms | 4 ms | 0 | 0.0000% | 0 |
-| GET /drops/{id} | 1 | 0 | 1 ms | 1 ms | 1 ms | 0 | 0.0000% | 0 |
+| POST /baseline/{id}/buy | 31 | 1 | 6 ms | 9 ms | 10 ms | 0 | 0.0000% | 21 |
+| POST /test/login | 21 | 1 | 7 ms | 18 ms | 34 ms | 0 | 0.0000% | 0 |
+| GET /drops/{id} | 1 | 0 | 6 ms | 6 ms | 6 ms | 0 | 0.0000% | 0 |
 
 ## Integrity (must be 0)
 
@@ -44,6 +44,6 @@ Experiment 4 - the 1-human scenario: ~50,000 bot requests from 5 operators with 
  "oversold": 0
 }
 ```
-audit chain valid: **True** (528407 events)  -> overall: **OK**
+audit chain valid: **True** (2 events)  -> overall: **OK**
 
 Charts: `charts/*.png`; machine-readable: `results.json`, `results.csv`, `latency.csv`.
