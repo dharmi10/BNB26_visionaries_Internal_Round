@@ -2,7 +2,7 @@
 
 Experiment 7 - malicious server: it silently drops one entry; that fan's verify page must turn red with proof.
 
-*policy under test:* **fairdrop** &nbsp; *duration:* 23.3s &nbsp; *drop:* `exp-exp7_malicious_server-fairdrop-4866bd`
+*policy under test:* **fairdrop** &nbsp; *duration:* 23.2s &nbsp; *drop:* `exp-exp7_malicious_server-fairdrop-4866bd`
 
 ## Traffic
 - verified identities participating: **300** (300 humans, 0 bot identities across 0 operators)
@@ -26,10 +26,10 @@ Experiment 7 - malicious server: it silently drops one entry; that fan's verify 
 
 | endpoint | requests | rps | p50 | p95 | p99 | 5xx/conn errors | error rate | rejected by design (4xx) |
 |---|---|---|---|---|---|---|---|---|
-| POST /test/login | 300 | 13 | 11 ms | 79 ms | 104 ms | 0 | 0.0000% | 0 |
-| GET /drops/{id} | 300 | 13 | 4 ms | 32 ms | 69 ms | 0 | 0.0000% | 0 |
-| POST /drops/{id}/test-token | 300 | 13 | 26 ms | 66 ms | 105 ms | 0 | 0.0000% | 0 |
-| POST /drops/{id}/register | 300 | 13 | 6 ms | 17 ms | 30 ms | 0 | 0.0000% | 0 |
+| POST /test/login | 300 | 13 | 6 ms | 14 ms | 18 ms | 0 | 0.0000% | 0 |
+| GET /drops/{id} | 300 | 13 | 3 ms | 6 ms | 13 ms | 0 | 0.0000% | 0 |
+| POST /drops/{id}/test-token | 300 | 13 | 16 ms | 28 ms | 38 ms | 0 | 0.0000% | 0 |
+| POST /drops/{id}/register | 300 | 13 | 4 ms | 9 ms | 15 ms | 0 | 0.0000% | 0 |
 
 ## Integrity (must be 0)
 
@@ -43,7 +43,7 @@ Experiment 7 - malicious server: it silently drops one entry; that fan's verify 
  "oversold": 0
 }
 ```
-audit chain valid: **True** (607 events)  -> overall: **VIOLATIONS**
+audit chain valid: **True** (3286 events)  -> overall: **VIOLATIONS**
 
 ## Independent verification (Python reference verifier)
 
@@ -61,7 +61,7 @@ audit chain valid: **True** (607 events)  -> overall: **VIOLATIONS**
 
 ```
 {
- "receipt_id": "7e9dcaaac122358aeafd3e95e50fdf561f61b3fae1484517ba6b142f06e2f239",
+ "receipt_id": "09b6c2c1a869b80336f6ecb58cef48bd8ccf1d55901f68ecb4126a50158e7ebc",
  "uid": "t_035906"
 }
 ```

@@ -41,8 +41,8 @@
    "human_claim_rate": 0.9,
    "tag": ""
   },
-  "started": "2026-10-04T03:42:17",
-  "duration_s": 23.3,
+  "started": "2026-10-04T03:59:16",
+  "duration_s": 23.2,
   "drop_id": "exp-exp7_malicious_server-fairdrop-4866bd",
   "policy": "fairdrop",
   "population": 50000,
@@ -65,52 +65,52 @@
  "latency": {
   "POST /test/login": {
    "requests": 300,
-   "p50_ms": 11.46,
-   "p95_ms": 79.14,
-   "p99_ms": 103.63,
+   "p50_ms": 5.65,
+   "p95_ms": 13.59,
+   "p99_ms": 17.73,
    "errors": 0,
    "error_rate": 0.0,
    "rejected_by_design": 0,
-   "rps": 12.876728556581803,
+   "rps": 12.949181275778974,
    "status": {
     "200": 300
    }
   },
   "GET /drops/{id}": {
    "requests": 300,
-   "p50_ms": 4.23,
-   "p95_ms": 32.08,
-   "p99_ms": 69.48,
+   "p50_ms": 3.09,
+   "p95_ms": 6.11,
+   "p99_ms": 12.75,
    "errors": 0,
    "error_rate": 0.0,
    "rejected_by_design": 0,
-   "rps": 12.876728556581803,
+   "rps": 12.949181275778974,
    "status": {
     "200": 300
    }
   },
   "POST /drops/{id}/test-token": {
    "requests": 300,
-   "p50_ms": 26.34,
-   "p95_ms": 65.65,
-   "p99_ms": 105.33,
+   "p50_ms": 16.42,
+   "p95_ms": 28.5,
+   "p99_ms": 38.39,
    "errors": 0,
    "error_rate": 0.0,
    "rejected_by_design": 0,
-   "rps": 12.876728556581803,
+   "rps": 12.949181275778974,
    "status": {
     "200": 300
    }
   },
   "POST /drops/{id}/register": {
    "requests": 300,
-   "p50_ms": 5.56,
-   "p95_ms": 16.54,
-   "p99_ms": 29.79,
+   "p50_ms": 4.22,
+   "p95_ms": 9.37,
+   "p99_ms": 14.57,
    "errors": 0,
    "error_rate": 0.0,
    "rejected_by_design": 0,
-   "rps": 12.876728556581803,
+   "rps": 12.949181275778974,
    "status": {
     "200": 300
    }
@@ -122,7 +122,7 @@
  },
  "extras": {
   "malicious_target": {
-   "receipt_id": "7e9dcaaac122358aeafd3e95e50fdf561f61b3fae1484517ba6b142f06e2f239",
+   "receipt_id": "09b6c2c1a869b80336f6ecb58cef48bd8ccf1d55901f68ecb4126a50158e7ebc",
    "uid": "t_035906"
   },
   "malicious": {
@@ -150,7 +150,7 @@
    {
     "name": "merkle root recomputed from entry list == published root",
     "ok": true,
-    "detail": "d3ffb6a16d56dd356008af7975c96a61dd638ea8c4be86430c048ff83f9b97a5"
+    "detail": "db53d2eca60d17bf91a80ae0d9d3776031a2f2749b08932c0dc25b67f3e58475"
    },
    {
     "name": "root equals the root observed when the list was locked (before seed reveal)",
@@ -183,10 +183,10 @@
     "detail": "receipt missing from the Merkle tree -> evidence of server misconduct if you hold a signed receipt"
    }
   ],
-  "merkle_root": "d3ffb6a16d56dd356008af7975c96a61dd638ea8c4be86430c048ff83f9b97a5",
+  "merkle_root": "db53d2eca60d17bf91a80ae0d9d3776031a2f2749b08932c0dc25b67f3e58475",
   "entry_count": 299,
   "beacon": true,
-  "seed_hash": "a8b9e3b2218e8036166bf06dd8729ac140bd9ec8500bd96047a8d22f2169a18b"
+  "seed_hash": "e538e8ef8bc3f9b7b0761942da99e333af1c5112f1fd6310c4ae5b9a3896e8d4"
  },
  "policies": {
   "fcfs": {
@@ -983,8 +983,8 @@
  "integrity": {
   "audit_chain": {
    "ok": true,
-   "length": 607,
-   "head_hash": "678057049a8de923bafb4b32aa4e4ea4c1cb06fcf8f571c420e44f5c8268ce74"
+   "length": 3286,
+   "head_hash": "f839d7d0de65b7e51b6de644752a2b5af7be0820ee3bc3199b4171d7893ad031"
   },
   "drop_id": "exp-exp7_malicious_server-fairdrop-4866bd",
   "info": {
@@ -994,7 +994,7 @@
    "illegal_transitions_rejected": 0,
    "ledger_lag": 0,
    "missing_receipt_examples": [
-    "7e9dcaaac122358aeafd3e95e50fdf561f61b3fae1484517ba6b142f06e2f239"
+    "09b6c2c1a869b80336f6ecb58cef48bd8ccf1d55901f68ecb4126a50158e7ebc"
    ],
    "rejected_reused_tokens": 0,
    "seats_owned_redis": 0,
@@ -1017,7 +1017,7 @@
   "actors": 300,
   "humans": 300,
   "bot_identities": 0,
-  "duration_s": 23.3,
+  "duration_s": 23.2,
   "client_requests": 1200,
   "bot_advantage_ratio": {
    "fcfs": null,
@@ -1048,8 +1048,8 @@
   },
   "verified_by_reference_verifier": false,
   "p99_ms": {
-   "/drops/{id}/test-token": 105.33,
-   "/drops/{id}/register": 29.79
+   "/drops/{id}/test-token": 38.39,
+   "/drops/{id}/register": 14.57
   }
  }
 }
